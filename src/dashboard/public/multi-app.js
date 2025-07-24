@@ -52,7 +52,7 @@ PetiteVue.createApp({
   handleWebSocketMessage(message) {
     switch (message.type) {
       case 'initial':
-        this.projects = Array.isArray(message.data) ? message.data : [];
+        this.projects = Array.isArray(message.data) ? this.normalizeProjects(message.data) : [];
         this.activeTasks = Array.isArray(message.activeTasks) ? message.activeTasks : [];
         this.username = message.username || 'User';
         console.log(`Received initial data: ${this.projects.length} projects, ${this.activeTasks.length} active tasks`);
@@ -335,5 +335,39 @@ PetiteVue.createApp({
 
   isRequirementsExpanded(specName) {
     return !!this.expandedRequirements[specName];
+  },
+
+  // Normalize project data to handle potential JSON serialization issues
+  normalizeProjects(projects) {
+    return projects.map(project => {
+      if (project.specs) {
+        project.specs = project.specs.map(spec => {
+          // Ensure requirements content is properly parsed
+          if (spec.requirements && spec.requirements.content) {
+            if (typeof spec.requirements.content === 'string') {
+              try {
+                spec.requirements.content = JSON.parse(spec.requirements.content);
+              } catch (e) {
+                console.warn('Failed to parse requirements content:', e);
+              }
+            }
+          }
+          
+          // Ensure design content is properly parsed
+          if (spec.design && spec.design.codeReuseContent) {
+            if (typeof spec.design.codeReuseContent === 'string') {
+              try {
+                spec.design.codeReuseContent = JSON.parse(spec.design.codeReuseContent);
+              } catch (e) {
+                console.warn('Failed to parse design content:', e);
+              }
+            }
+          }
+          
+          return spec;
+        });
+      }
+      return project;
+    });
   },
 }).mount('#app');
