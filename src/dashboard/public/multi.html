@@ -294,26 +294,63 @@
 
                 <!-- Expanded details -->
                 <div v-if="selectedSpec?.name === spec.name" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                     <div>
                       <h4 class="font-medium text-gray-900 dark:text-white mb-2">
                         <i class="fas fa-clipboard-list mr-1"></i> Requirements
                       </h4>
                       <div v-if="spec.requirements" class="text-sm text-gray-600 dark:text-gray-400">
-                        <p class="flex items-center mb-2">
-                          <i
-                            class="fas mr-1"
-                            :class="spec.requirements.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
-                          ></i>
-                          {{ spec.requirements.userStories }} user stories - {{ spec.requirements.approved ? 'Approved' : 'Pending' }}
-                        </p>
-                        <div v-if="spec.requirements.content && spec.requirements.content.length > 0" class="space-y-1">
+                        <div class="flex items-center justify-between mb-2">
+                          <p class="flex items-center">
+                            <i
+                              class="fas mr-1"
+                              :class="spec.requirements.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
+                            ></i>
+                            {{ spec.requirements.content?.length || 0 }} requirements - {{ spec.requirements.approved ? 'Approved' : 'Pending' }}
+                          </p>
+                          <button 
+                            v-if="spec.requirements.content && spec.requirements.content.length > 0"
+                            @click="toggleRequirementsExpanded(spec.name)"
+                            class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center"
+                          >
+                            <i class="fas mr-1" :class="isRequirementsExpanded(spec.name) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            {{ isRequirementsExpanded(spec.name) ? 'Collapse' : 'Expand Details' }}
+                          </button>
+                        </div>
+                        
+                        <!-- Collapsed view - just requirement titles -->
+                        <div v-if="spec.requirements.content && spec.requirements.content.length > 0 && !isRequirementsExpanded(spec.name)" class="space-y-1">
                           <div 
-                            v-for="story in spec.requirements.content" 
-                            :key="story"
+                            v-for="requirement in spec.requirements.content" 
+                            :key="requirement.id"
                             class="text-xs text-gray-600 dark:text-gray-400 pl-2 border-l-2 border-gray-200 dark:border-gray-600"
                           >
-                            {{ story }}
+                            <strong>{{ requirement.id }}:</strong> {{ requirement.title }}
+                          </div>
+                        </div>
+
+                        <!-- Expanded view - full details -->
+                        <div v-if="spec.requirements.content && spec.requirements.content.length > 0 && isRequirementsExpanded(spec.name)" class="space-y-3">
+                          <div 
+                            v-for="requirement in spec.requirements.content" 
+                            :key="requirement.id"
+                            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
+                          >
+                            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                              <strong>Requirement {{ requirement.id }}:</strong> {{ requirement.title }}
+                            </h5>
+                            <div v-if="requirement.userStory" class="text-xs text-blue-600 dark:text-blue-400 mb-2 italic">
+                              {{ requirement.userStory }}
+                            </div>
+                            <div v-if="requirement.acceptanceCriteria.length > 0">
+                              <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Acceptance Criteria:</p>
+                              <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                <li v-for="criteria in requirement.acceptanceCriteria" :key="criteria" class="flex items-start">
+                                  <span class="mr-2">•</span>
+                                  <span>{{ criteria }}</span>
+                                </li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -344,27 +381,24 @@
                       </div>
                       <p v-else class="text-sm text-gray-400 dark:text-gray-500">Not created</p>
                     </div>
-                    <div>
-                      <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                        <i class="fas fa-tasks mr-1"></i> Tasks
-                      </h4>
-                      <div v-if="spec.tasks" class="text-sm text-gray-600 dark:text-gray-400">
-                        <p>{{ spec.tasks.total }} total tasks</p>
-                        <p class="flex items-center mt-1">
-                          <i
-                            class="fas mr-1"
-                            :class="spec.tasks.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
-                          ></i>
-                          {{ spec.tasks.approved ? 'Approved' : 'Pending approval' }}
-                        </p>
-                      </div>
-                      <p v-else class="text-sm text-gray-400 dark:text-gray-500">Not created</p>
-                    </div>
                   </div>
 
                   <!-- Task list -->
                   <div v-if="spec.tasks && spec.tasks.taskList.length > 0" class="mt-4">
-                    <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Task Breakdown</h4>
+                    <div class="flex items-center justify-between mb-2">
+                      <h4 class="font-medium text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-tasks mr-1"></i> Task Breakdown ({{ spec.tasks.total }} tasks)
+                      </h4>
+                      <span class="flex items-center text-sm">
+                        <i
+                          class="fas mr-1"
+                          :class="spec.tasks.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
+                        ></i>
+                        <span :class="spec.tasks.approved ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
+                          {{ spec.tasks.approved ? 'Approved' : 'Pending' }}
+                        </span>
+                      </span>
+                    </div>
                     <div class="space-y-1">
                       <div
                         v-for="task in spec.tasks.taskList"

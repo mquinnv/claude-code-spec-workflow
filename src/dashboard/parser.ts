@@ -11,6 +11,13 @@ export interface Task {
   subtasks?: Task[];
 }
 
+export interface RequirementDetail {
+  id: string;
+  title: string;
+  userStory?: string;
+  acceptanceCriteria: string[];
+}
+
 export interface Spec {
   name: string;
   displayName: string;
@@ -19,7 +26,7 @@ export interface Spec {
     exists: boolean;
     userStories: number;
     approved: boolean;
-    content?: string[];
+    content?: RequirementDetail[];
   };
   design?: {
     exists: boolean;
@@ -287,41 +294,54 @@ export class SpecParser {
       .join(' ');
   }
 
-  private extractRequirements(content: string): string[] {
-    const requirements: string[] = [];
+  private extractRequirements(content: string): RequirementDetail[] {
+    const requirements: RequirementDetail[] = [];
     const lines = content.split('\n');
-    let currentRequirement = '';
-    let inRequirementSection = false;
+    let currentRequirement: RequirementDetail | null = null;
+    let inAcceptanceCriteria = false;
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
       // Check if line contains a numbered requirement
       if (line.match(/^### Requirement \d+:/)) {
+        // Save previous requirement
         if (currentRequirement) {
-          requirements.push(currentRequirement.trim());
+          requirements.push(currentRequirement);
         }
-        // Extract the requirement title
-        currentRequirement = line.replace(/^### /, '').trim();
-        inRequirementSection = true;
-      } else if (inRequirementSection && line.trim()) {
-        // Stop at next major section or next requirement
-        if (line.startsWith('### Requirement') || line.startsWith('## ') || line.startsWith('#')) {
-          if (currentRequirement) {
-            requirements.push(currentRequirement.trim());
-            currentRequirement = '';
-          }
-          // If this line is another requirement, process it
-          if (line.match(/^### Requirement \d+:/)) {
-            currentRequirement = line.replace(/^### /, '').trim();
-          } else {
-            inRequirementSection = false;
-          }
+        
+        // Extract requirement number and title
+        const match = line.match(/^### Requirement (\d+): (.+)/);
+        if (match) {
+          currentRequirement = {
+            id: match[1],
+            title: match[2].trim(),
+            acceptanceCriteria: []
+          };
         }
+        inAcceptanceCriteria = false;
+      } 
+      // Look for user story
+      else if (currentRequirement && line.includes('**User Story:**')) {
+        currentRequirement.userStory = line.replace('**User Story:**', '').trim();
+      }
+      // Look for acceptance criteria section
+      else if (currentRequirement && line.includes('#### Acceptance Criteria')) {
+        inAcceptanceCriteria = true;
+      }
+      // Collect acceptance criteria items
+      else if (currentRequirement && inAcceptanceCriteria && line.match(/^\d+\. /)) {
+        currentRequirement.acceptanceCriteria.push(line.replace(/^\d+\. /, '').trim());
+      }
+      // Stop at next major section
+      else if (line.startsWith('### Requirement') || line.startsWith('## ')) {
+        inAcceptanceCriteria = false;
       }
     }
 
     // Don't forget the last requirement
     if (currentRequirement) {
-      requirements.push(currentRequirement.trim());
+      requirements.push(currentRequirement);
     }
 
     return requirements;

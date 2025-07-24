@@ -321,4 +321,19 @@ PetiteVue.createApp({
     const spec = project.specs.find(s => s.name === activeTask.specName);
     return spec || null;
   },
+
+  // Requirements expansion state management
+  expandedRequirements: new Set(),
+
+  toggleRequirementsExpanded(specName) {
+    if (this.expandedRequirements.has(specName)) {
+      this.expandedRequirements.delete(specName);
+    } else {
+      this.expandedRequirements.add(specName);
+    }
+  },
+
+  isRequirementsExpanded(specName) {
+    return this.expandedRequirements.has(specName);
+  },
 }).mount('#app');
