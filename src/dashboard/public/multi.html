@@ -157,12 +157,10 @@
                   
                   <!-- Next Task -->
                   <div v-if="getNextTask(activeTask)" class="mb-3">
-                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Next Up:
-                    </h5>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Next Up:</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
                       Task {{ getNextTask(activeTask).id }}: {{ getNextTask(activeTask).description }}
-                    </p>
+                    </span>
                   </div>
                   
                   <!-- Task Details -->
