@@ -1,13 +1,13 @@
 import { watch, FSWatcher } from 'chokidar';
 import { EventEmitter } from 'events';
 import { join } from 'path';
-import { SpecParser } from './parser';
+import { SpecParser, Spec } from './parser';
 
 export interface SpecChangeEvent {
   type: 'added' | 'changed' | 'removed';
   spec: string;
   file: string;
-  data?: any;
+  data?: Spec | null;
 }
 
 export class SpecWatcher extends EventEmitter {

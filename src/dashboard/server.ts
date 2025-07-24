@@ -7,6 +7,10 @@ import { SpecParser } from './parser';
 import open from 'open';
 import { WebSocket } from 'ws';
 
+interface WebSocketConnection {
+  socket: WebSocket;
+}
+
 export interface DashboardOptions {
   port: number;
   projectPath: string;
@@ -40,7 +44,7 @@ export class DashboardServer {
     // WebSocket endpoint for real-time updates
     const self = this;
     this.app.register(async function (fastify) {
-      fastify.get('/ws', { websocket: true }, (connection: any) => {
+      fastify.get('/ws', { websocket: true }, (connection: WebSocketConnection) => {
         const socket = connection.socket;
         console.log('WebSocket client connected');
 
@@ -64,7 +68,7 @@ export class DashboardServer {
           self.clients.delete(socket);
         });
 
-        socket.on('error', (error: any) => {
+        socket.on('error', (error: Error) => {
           console.error('WebSocket error:', error);
           self.clients.delete(socket);
         });

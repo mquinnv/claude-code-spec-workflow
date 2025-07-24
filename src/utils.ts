@@ -66,7 +66,7 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
   try {
     await fs.mkdir(dirPath, { recursive: true });
   } catch (error) {
-    if ((error as any).code !== 'EEXIST') {
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code !== 'EEXIST') {
       throw error;
     }
   }

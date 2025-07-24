@@ -3,7 +3,7 @@ import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import { join } from 'path';
 import { SpecWatcher } from './watcher';
-import { SpecParser } from './parser';
+import { SpecParser, Task } from './parser';
 import { ProjectDiscovery, DiscoveredProject } from './project-discovery';
 import open from 'open';
 import { WebSocket } from 'ws';
@@ -13,6 +13,20 @@ interface ProjectState {
   project: DiscoveredProject;
   parser: SpecParser;
   watcher: SpecWatcher;
+}
+
+interface WebSocketConnection {
+  socket: WebSocket;
+}
+
+interface ActiveTask {
+  projectPath: string;
+  projectName: string;
+  specName: string;
+  specDisplayName: string;
+  task: Task;
+  isCurrentlyActive: boolean;
+  hasActiveSession: boolean;
 }
 
 export interface MultiDashboardOptions {
@@ -67,7 +81,7 @@ export class MultiProjectDashboardServer {
     // WebSocket endpoint
     const self = this;
     this.app.register(async function (fastify) {
-      fastify.get('/ws', { websocket: true }, (connection: any) => {
+      fastify.get('/ws', { websocket: true }, (connection: WebSocketConnection) => {
         const socket = connection.socket;
         console.log('Multi-project WebSocket client connected');
 
@@ -80,7 +94,7 @@ export class MultiProjectDashboardServer {
           self.clients.delete(socket);
         });
 
-        socket.on('error', (error: any) => {
+        socket.on('error', (error: Error) => {
           console.error('WebSocket error:', error);
           self.clients.delete(socket);
         });
@@ -188,8 +202,8 @@ export class MultiProjectDashboardServer {
     );
   }
 
-  private async collectActiveTasks(): Promise<any[]> {
-    const activeTasks: any[] = [];
+  private async collectActiveTasks(): Promise<ActiveTask[]> {
+    const activeTasks: ActiveTask[] = [];
     
     for (const [projectPath, state] of this.projects) {
       // Only collect tasks from projects with active Claude sessions
@@ -229,7 +243,7 @@ export class MultiProjectDashboardServer {
     return activeTasks;
   }
 
-  private findTaskById(tasks: any[], taskId: string): any | null {
+  private findTaskById(tasks: Task[], taskId: string): Task | null {
     for (const task of tasks) {
       if (task.id === taskId) {
         return task;
