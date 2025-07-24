@@ -97,7 +97,7 @@ PetiteVue.createApp({
         // Update specs within the project
         if (event.type === 'removed') {
           project.specs = project.specs.filter(s => s.name !== event.spec);
- else {
+        } else {
           // Update or add the spec
           const specIndex = project.specs.findIndex(s => s.name === event.spec);
           if (specIndex >= 0 && event.data) {
