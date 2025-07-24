@@ -249,11 +249,18 @@ PetiteVue.createApp({
     }
   },
 
-  selectProjectFromTask(projectPath) {
+  selectProjectFromTask(projectPath, specName) {
     const project = this.projects.find(p => p.path === projectPath);
     if (project) {
       this.activeTab = 'projects';
       this.selectedProject = project;
+      // If a spec name is provided, select that specific spec
+      if (specName) {
+        const spec = project.specs.find(s => s.name === specName);
+        if (spec) {
+          this.selectedSpec = spec;
+        }
+      }
     }
   },
 

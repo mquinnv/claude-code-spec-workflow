@@ -107,8 +107,9 @@
             <div
               v-for="activeTask in activeTasks"
               :key="`${activeTask.projectPath}-${activeTask.specName}-${activeTask.task.id}`"
-              class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
+              class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
               :class="{'ring-2 ring-yellow-500 dark:ring-yellow-400': activeTask.isCurrentlyActive}"
+              @click="selectProjectFromTask(activeTask.projectPath, activeTask.specName)"
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
@@ -118,7 +119,7 @@
                       <span v-if="activeTask.isCurrentlyActive" class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" title="Currently active"></span>
                       <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                         <a 
-                          @click="selectProjectFromTask(activeTask.projectPath)"
+                          @click="selectProjectFromTask(activeTask.projectPath, activeTask.specName)"
                           class="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
                         >
                           {{ activeTask.projectName }}
