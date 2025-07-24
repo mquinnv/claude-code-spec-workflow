@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Approval Checkbox Format**: Commands now instruct to add `✅ APPROVED` marker when phases are approved
+  - Updated all spec commands to include approval marker instructions
+  - Added placeholder comments in templates for approval markers
+  - Ensures consistent approval tracking across all phases
+
 ## [1.2.3] - 2025-07-22
 
 ### Added
