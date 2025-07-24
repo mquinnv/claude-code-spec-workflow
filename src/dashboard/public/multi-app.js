@@ -97,14 +97,7 @@ PetiteVue.createApp({
         // Update specs within the project
         if (event.type === 'removed') {
           project.specs = project.specs.filter(s => s.name !== event.spec);
-        } else if (event.type === 'hook') {
-          // Handle hook events
-          const specIndex = project.specs.findIndex(s => s.name === event.spec);
-          if (specIndex >= 0 && event.data) {
-            project.specs[specIndex] = event.data;
-            console.log(`Task ${event.hook.taskId} ${event.hook.action} in ${event.spec}`);
-          }
-        } else {
+ else {
           // Update or add the spec
           const specIndex = project.specs.findIndex(s => s.name === event.spec);
           if (specIndex >= 0 && event.data) {

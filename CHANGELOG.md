@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time updates via WebSocket when specs/tasks change
   - Visual progress tracking with expandable task lists
   - Shows task leverage references and requirements
-  - Supports Claude hooks for active task detection
   - No heavy frameworks - optimized for speed and simplicity
 
 - **Multi-Project Dashboard**: Monitor all Claude projects across your system
@@ -28,12 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Active Sessions Tab**: Shows currently active tasks from projects with active Claude sessions
   - First tab in multi-project dashboard
-  - Only shows tasks marked as "In Progress" from projects where Claude is running
-  - Each spec can have one task marked as currently in progress
+  - Only shows the first incomplete task from each spec in projects where Claude is running
   - Displays task header info: ID, description, project, spec
   - Shows requirements and leverage references
   - Click project name to jump to that project's view
-  - Helps focus on what's being actively worked on right now
+  - Helps focus on what's next to be worked on in active projects
 
 ### Enhanced
 - **Package Structure**: Added new dashboard module

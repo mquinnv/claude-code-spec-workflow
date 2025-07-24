@@ -92,24 +92,7 @@ PetiteVue.createApp({
         const event = message.data;
         if (event.type === 'removed') {
           this.specs = this.specs.filter((s) => s.name !== event.spec);
-        } else if (event.type === 'hook') {
-          // Handle hook events (task started/completed)
-          const index = this.specs.findIndex((s) => s.name === event.spec);
-          if (index >= 0 && event.data) {
-            // Update the spec with new data
-            this.specs[index] = event.data;
-            
-            // Show a notification or highlight the change
-            if (event.hook) {
-              console.log(`Task ${event.hook.taskId} ${event.hook.action} in ${event.spec}`);
-              
-              // If this is the selected spec, we might want to flash or highlight the task
-              if (this.selectedSpec?.name === event.spec) {
-                this.selectedSpec = event.data;
-              }
-            }
-          }
-        } else {
+ else {
           // Update or add the spec
           const index = this.specs.findIndex((s) => s.name === event.spec);
           if (index >= 0 && event.data) {

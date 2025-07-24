@@ -34,10 +34,6 @@ export interface Spec {
     taskList: Task[];
   };
   lastModified?: Date;
-  currentlyWorking?: {
-    taskId: string;
-    startedAt: Date;
-  };
 }
 
 export class SpecParser {

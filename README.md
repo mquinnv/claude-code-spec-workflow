@@ -136,8 +136,7 @@ npx claude-spec-dashboard --dir /path/to/project
 - **Task breakdown** - Expandable task lists with status
 - **Code reuse visibility** - See leverage references at a glance
 - **Multi-project support** - Monitor all your Claude projects at once
-- **Active Sessions tab** - See in-progress tasks from projects with active Claude sessions
-- **Claude hooks integration** - Highlights currently active tasks
+- **Active Sessions tab** - See next tasks to work on from projects with active Claude sessions
 - **Modern UI** - Built with Tailwind CSS and petite-vue
 - **Lightweight** - No heavy frameworks, just fast tools
 - **WebSocket powered** - Instant updates when files change
