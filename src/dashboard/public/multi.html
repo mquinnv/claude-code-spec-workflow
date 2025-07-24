@@ -300,14 +300,22 @@
                         <i class="fas fa-clipboard-list mr-1"></i> Requirements
                       </h4>
                       <div v-if="spec.requirements" class="text-sm text-gray-600 dark:text-gray-400">
-                        <p>{{ spec.requirements.userStories }} user stories</p>
-                        <p class="flex items-center mt-1">
+                        <p class="flex items-center mb-2">
                           <i
                             class="fas mr-1"
                             :class="spec.requirements.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
                           ></i>
-                          {{ spec.requirements.approved ? 'Approved' : 'Pending approval' }}
+                          {{ spec.requirements.userStories }} user stories - {{ spec.requirements.approved ? 'Approved' : 'Pending' }}
                         </p>
+                        <div v-if="spec.requirements.content && spec.requirements.content.length > 0" class="space-y-1">
+                          <div 
+                            v-for="story in spec.requirements.content" 
+                            :key="story"
+                            class="text-xs text-gray-600 dark:text-gray-400 pl-2 border-l-2 border-gray-200 dark:border-gray-600"
+                          >
+                            {{ story }}
+                          </div>
+                        </div>
                       </div>
                       <p v-else class="text-sm text-gray-400 dark:text-gray-500">Not created</p>
                     </div>
@@ -316,20 +324,23 @@
                         <i class="fas fa-drafting-compass mr-1"></i> Design
                       </h4>
                       <div v-if="spec.design" class="text-sm text-gray-600 dark:text-gray-400">
-                        <p class="flex items-center">
-                          <i
-                            class="fas mr-1"
-                            :class="spec.design.hasCodeReuseAnalysis ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'"
-                          ></i>
-                          Code reuse analysis
-                        </p>
-                        <p class="flex items-center mt-1">
+                        <p class="flex items-center mb-2">
                           <i
                             class="fas mr-1"
                             :class="spec.design.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
                           ></i>
-                          {{ spec.design.approved ? 'Approved' : 'Pending approval' }}
+                          {{ spec.design.approved ? 'Approved' : 'Pending' }} - 
+                          <span :class="spec.design.hasCodeReuseAnalysis ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                            {{ spec.design.hasCodeReuseAnalysis ? 'Has' : 'Missing' }} code reuse analysis
+                          </span>
                         </p>
+                        <div v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0" class="space-y-1">
+                          <div class="text-xs text-green-600 dark:text-green-400">
+                            <span v-for="(item, index) in spec.design.codeReuseContent" :key="item">
+                              • {{ item }}<span v-if="index < spec.design.codeReuseContent.length - 1"> | </span>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       <p v-else class="text-sm text-gray-400 dark:text-gray-500">Not created</p>
                     </div>
@@ -366,21 +377,21 @@
                           :class="task.completed ? 'fa-check-square text-green-500' : 'fa-square text-gray-400'"
                         ></i>
                         <div class="flex-1">
-                          <div class="flex items-center">
+                          <div class="flex items-center flex-wrap gap-2">
                             <span class="font-medium text-sm text-gray-900 dark:text-gray-200">Task {{ task.id }}:</span>
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ task.description }}</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ task.description }}</span>
                             <span
                               v-if="spec.tasks.inProgress === task.id"
-                              class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-500 dark:text-yellow-900"
+                              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-500 dark:text-yellow-900"
                             >
                               <i class="fas fa-play mr-1"></i> In Progress
                             </span>
-                          </div>
-                          <div v-if="task.requirements && task.requirements.length > 0" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Requirements: {{ task.requirements.join(', ') }}
-                          </div>
-                          <div v-if="task.leverage" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                            <i class="fas fa-code-branch mr-1"></i> Leverage: {{ task.leverage }}
+                            <span v-if="task.requirements && task.requirements.length > 0" class="text-xs text-gray-500 dark:text-gray-400">
+                              Req: {{ task.requirements.join(', ') }}
+                            </span>
+                            <span v-if="task.leverage" class="text-xs text-blue-600 dark:text-blue-400">
+                              <i class="fas fa-code-branch mr-1"></i> {{ task.leverage }}
+                            </span>
                           </div>
                         </div>
                       </div>
