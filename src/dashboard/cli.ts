@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name('claude-spec-dashboard')
   .description('Launch a real-time dashboard for Claude Code Spec Workflow')
-  .version('1.0.0');
+  .version('1.3.0');
 
 program
   .option('-p, --port <port>', 'Port to run the dashboard on', '3000')

@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name('claude-spec-setup')
   .description('Set up Claude Code Spec Workflow in your project')
-  .version('1.1.2');
+  .version('1.3.0');
 
 program
   .option('-p, --project <path>', 'Project directory', process.cwd())

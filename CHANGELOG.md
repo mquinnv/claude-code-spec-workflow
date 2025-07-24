@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-07-24
+
+### Added
+- **Real-Time Dashboard**: New web-based dashboard for monitoring specs and tasks
+  - `claude-spec-dashboard` command launches a lightweight server
+  - Built with Fastify, petite-vue (6kb), and Tailwind CSS
+  - Real-time updates via WebSocket when specs/tasks change
+  - Visual progress tracking with expandable task lists
+  - Shows task leverage references and requirements
+  - Supports Claude hooks for active task detection
+  - No heavy frameworks - optimized for speed and simplicity
+
+### Enhanced
+- **Package Structure**: Added new dashboard module
+  - `src/dashboard/` contains all dashboard-related code
+  - Separate CLI entry point for dashboard command
+  - File watcher using chokidar for real-time monitoring
+  - Spec parser extracts detailed status and progress information
+
 ## [1.2.3] - 2025-07-22
 
 ### Added
