@@ -8,13 +8,13 @@ const execAsync = promisify(exec);
 export async function detectProjectType(projectPath: string): Promise<string[]> {
   const indicators = {
     'Node.js': ['package.json', 'node_modules'],
-    'Python': ['requirements.txt', 'setup.py', 'pyproject.toml', '__pycache__'],
-    'Java': ['pom.xml', 'build.gradle'],
+    Python: ['requirements.txt', 'setup.py', 'pyproject.toml', '__pycache__'],
+    Java: ['pom.xml', 'build.gradle'],
     'C#': ['*.csproj', '*.sln'],
-    'Go': ['go.mod', 'go.sum'],
-    'Rust': ['Cargo.toml', 'Cargo.lock'],
-    'PHP': ['composer.json', 'vendor'],
-    'Ruby': ['Gemfile', 'Gemfile.lock'],
+    Go: ['go.mod', 'go.sum'],
+    Rust: ['Cargo.toml', 'Cargo.lock'],
+    PHP: ['composer.json', 'vendor'],
+    Ruby: ['Gemfile', 'Gemfile.lock'],
   };
 
   const detected: string[] = [];
@@ -26,7 +26,7 @@ export async function detectProjectType(projectPath: string): Promise<string[]> 
           // Handle glob patterns - simplified check
           const dirContents = await fs.readdir(projectPath);
           const extension = file.replace('*', '');
-          if (dirContents.some(f => f.endsWith(extension))) {
+          if (dirContents.some((f) => f.endsWith(extension))) {
             detected.push(projectType);
             break;
           }

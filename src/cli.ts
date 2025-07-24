@@ -55,8 +55,8 @@ program
               type: 'confirm',
               name: 'proceed',
               message: '.claude directory already exists. Overwrite?',
-              default: false
-            }
+              default: false,
+            },
           ]);
 
           if (!proceed) {
@@ -84,8 +84,8 @@ program
             type: 'confirm',
             name: 'confirm',
             message: 'Proceed with setup?',
-            default: true
-          }
+            default: true,
+          },
         ]);
 
         if (!confirm) {
@@ -118,7 +118,6 @@ program
       console.log(chalk.gray('2. Try: /spec-create my-feature'));
       console.log();
       console.log(chalk.blue('📖 For help, see the README or run /spec-list'));
-
     } catch (error) {
       spinner.fail('Setup failed');
       console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
@@ -145,7 +144,6 @@ program
 
       console.log(chalk.green('✅ Test completed successfully!'));
       console.log(chalk.gray(`Test directory: ${tempDir}`));
-
     } catch (error) {
       console.error(chalk.red('❌ Test failed:'), error);
       process.exit(1);

@@ -377,7 +377,7 @@ in_task=false
 
 while IFS= read -r line; do
     # Match task lines like "- [ ] 1. Task description" or "- [ ] 2.1 Task description"
-    if [[ $line =~ ^[[:space:]]*-[[:space:]]*\\[[[:space:]]*\\][[:space:]]*([0-9]+(\.[0-9]+)*)[[:space:]]*\\.?[[:space:]]*(.+)$ ]]; then
+    if [[ $line =~ ^[[:space:]]*-[[:space:]]*\\[[[:space:]]*\\][[:space:]]*([0-9]+(\\.[0-9]+)*)[[:space:]]*\\.?[[:space:]]*(.+)$ ]]; then
         # If we were processing a previous task, generate its command
         if [ "$in_task" = true ] && [ -n "$current_task_id" ]; then
             generate_task_command "$current_task_id" "$current_task_desc" "$current_leverage" "$current_requirements"
@@ -419,7 +419,7 @@ echo "Generated commands:"
 
 # Show generated commands  
 while IFS= read -r line; do
-    if [[ $line =~ ^[[:space:]]*-[[:space:]]*\\[[[:space:]]*\\][[:space:]]*([0-9]+(\.[0-9]+)*)[[:space:]]*\\.?[[:space:]]*(.+)$ ]]; then
+    if [[ $line =~ ^[[:space:]]*-[[:space:]]*\\[[[:space:]]*\\][[:space:]]*([0-9]+(\\.[0-9]+)*)[[:space:]]*\\.?[[:space:]]*(.+)$ ]]; then
         task_id="\${BASH_REMATCH[1]}"
         task_desc="\${BASH_REMATCH[3]}"
         echo "  /$SPEC_NAME-task-$task_id - $task_desc"
@@ -576,6 +576,8 @@ If the launcher fails to detect the OS or find the appropriate script:
 // Legacy function kept for backward compatibility during transition
 // This should not be used anymore - use platform-specific scripts instead
 export function getCommandGenerationScript(): string {
-  console.warn('WARNING: getCommandGenerationScript() is deprecated. Use platform-specific scripts instead.');
+  console.warn(
+    'WARNING: getCommandGenerationScript() is deprecated. Use platform-specific scripts instead.'
+  );
   return getCommandGenerationInstructions();
 }
