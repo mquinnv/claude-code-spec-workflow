@@ -52,9 +52,10 @@ PetiteVue.createApp({
   handleWebSocketMessage(message) {
     switch (message.type) {
       case 'initial':
-        this.projects = message.data;
-        this.activeTasks = message.activeTasks || [];
+        this.projects = Array.isArray(message.data) ? message.data : [];
+        this.activeTasks = Array.isArray(message.activeTasks) ? message.activeTasks : [];
         this.username = message.username || 'User';
+        console.log(`Received initial data: ${this.projects.length} projects, ${this.activeTasks.length} active tasks`);
         // Sort projects: active first, then by activity
         this.sortProjects();
         // Select first project (which will be the most relevant after sorting)
@@ -238,8 +239,13 @@ PetiteVue.createApp({
     this.activeTab = tab;
     if (tab === 'active') {
       this.selectedProject = null;
-    } else if (tab === 'projects' && this.projects.length > 0 && !this.selectedProject) {
-      this.selectedProject = this.projects[0];
+    } else if (tab === 'projects') {
+      // Ensure we have a selected project when switching to projects tab
+      if (this.projects.length > 0 && !this.selectedProject) {
+        this.selectedProject = this.projects[0];
+      } else if (this.projects.length === 0) {
+        this.selectedProject = null;
+      }
     }
   },
 
