@@ -242,7 +242,7 @@
                       <i class="fas fa-clipboard-check mr-1"></i>
                       Req: {{ activeTask.task.requirements.join(', ') }}
                     </span>
-                    <span v-if="activeTask.task.leverage" class="text-blue-600 dark:text-blue-400">
+                    <span v-if="activeTask.task.leverage" class="text-gray-600 dark:text-gray-400">
                       <i class="fas fa-code-branch mr-1"></i>
                       Leverage: {{ activeTask.task.leverage }}
                     </span>
@@ -573,7 +573,7 @@
                             </span>
                             <span
                               v-if="task.leverage"
-                              class="text-xs text-blue-600 dark:text-blue-400"
+                              class="text-xs text-gray-500 dark:text-gray-400"
                             >
                               <i class="fas fa-code-branch mr-1"></i> {{ task.leverage }}
                             </span>
