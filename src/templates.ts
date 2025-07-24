@@ -39,6 +39,10 @@ export function getRequirementsTemplate(): string {
 
 ### Usability
 - [Usability requirements]
+
+---
+
+<!-- Approval marker will be added here when approved -->
 `;
 }
 
@@ -114,6 +118,10 @@ interface Model2 {
 ### End-to-End Testing
 - [E2E testing approach]
 - [User scenarios to test]
+
+---
+
+<!-- Approval marker will be added here when approved -->
 `;
 }
 
@@ -195,5 +203,9 @@ export function getTasksTemplate(): string {
   - Fix any integration issues
   - Clean up code and documentation
   - _Requirements: All_
+
+---
+
+<!-- Approval marker will be added here when approved -->
 `;
 }

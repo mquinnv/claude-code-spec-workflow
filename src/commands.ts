@@ -41,6 +41,7 @@ You are helping create a new feature specification. Follow these steps:
    - **Include codebase analysis summary**: Briefly note what existing code can be leveraged
    - Ask: "Do the requirements look good? If so, we can move on to the design."
    - Wait for explicit approval before proceeding
+   - When user approves, add \`✅ APPROVED\` at the end of the requirements.md file
 
 6. **Complete Requirements Phase**
    - Present the requirements document with reuse opportunities highlighted
@@ -102,6 +103,7 @@ You are working on the requirements phase of the spec workflow.
    - Ask: "Do the requirements look good? If so, we can move on to the design."
    - Make revisions based on feedback
    - Continue until explicit approval is received
+   - When user approves, add \`✅ APPROVED\` at the end of the requirements.md file
 
 ## Requirements Format
 \`\`\`markdown
@@ -176,6 +178,7 @@ You are working on the design phase of the spec workflow.
    - Ask: "Does the design look good? If so, we can move on to the implementation plan."
    - Incorporate feedback and revisions
    - Continue until explicit approval
+   - When user approves, add \`✅ APPROVED\` at the end of the design.md file
 
 ## Design Structure
 \`\`\`markdown
@@ -266,6 +269,7 @@ You are working on the tasks phase of the spec workflow.
    - Ask: "Do the tasks look good?"
    - Make revisions based on feedback
    - Continue until explicit approval
+   - When user approves, add \`✅ APPROVED\` at the end of the tasks.md file
 
 7. **Generate Task Commands** (ONLY after tasks approval)
    - **WAIT**: Do not run script until user explicitly approves tasks
