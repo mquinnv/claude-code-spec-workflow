@@ -312,42 +312,57 @@ export class SpecParser {
     let currentRequirement: RequirementDetail | null = null;
     let inAcceptanceCriteria = false;
 
+    console.log('Extracting requirements from content...');
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // Check if line contains a numbered requirement
-      if (line.match(/^### Requirement \d+:/)) {
-        // Save previous requirement
-        if (currentRequirement) {
-          requirements.push(currentRequirement);
-        }
+      // Check if line contains a numbered requirement - try multiple patterns
+      const requirementPatterns = [
+        /^### Requirement (\d+): (.+)$/,           // ### Requirement 1: Title
+        /^## Requirement (\d+): (.+)$/,            // ## Requirement 1: Title
+        /^### (\d+)\. (.+)$/,                      // ### 1. Title
+        /^## (\d+)\. (.+)$/,                       // ## 1. Title
+      ];
 
-        // Extract requirement number and title
-        const match = line.match(/^### Requirement (\d+): (.+)/);
+      let matchFound = false;
+      for (const pattern of requirementPatterns) {
+        const match = line.match(pattern);
         if (match) {
+          // Save previous requirement
+          if (currentRequirement) {
+            requirements.push(currentRequirement);
+          }
+
           currentRequirement = {
             id: match[1],
             title: match[2].trim(),
             acceptanceCriteria: [],
           };
+          console.log(`Found requirement ${match[1]}: ${match[2].trim()}`);
+          inAcceptanceCriteria = false;
+          matchFound = true;
+          break;
         }
-        inAcceptanceCriteria = false;
       }
-      // Look for user story
-      else if (currentRequirement && line.includes('**User Story:**')) {
-        currentRequirement.userStory = line.replace('**User Story:**', '').trim();
-      }
-      // Look for acceptance criteria section
-      else if (currentRequirement && line.includes('#### Acceptance Criteria')) {
-        inAcceptanceCriteria = true;
-      }
-      // Collect acceptance criteria items
-      else if (currentRequirement && inAcceptanceCriteria && line.match(/^\d+\. /)) {
-        currentRequirement.acceptanceCriteria.push(line.replace(/^\d+\. /, '').trim());
-      }
-      // Stop at next major section
-      else if (line.startsWith('### Requirement') || line.startsWith('## ')) {
-        inAcceptanceCriteria = false;
+
+      if (!matchFound) {
+        // Look for user story
+        if (currentRequirement && line.includes('**User Story:**')) {
+          currentRequirement.userStory = line.replace('**User Story:**', '').trim();
+        }
+        // Look for acceptance criteria section
+        else if (currentRequirement && line.includes('#### Acceptance Criteria')) {
+          inAcceptanceCriteria = true;
+        }
+        // Collect acceptance criteria items
+        else if (currentRequirement && inAcceptanceCriteria && line.match(/^\d+\. /)) {
+          currentRequirement.acceptanceCriteria.push(line.replace(/^\d+\. /, '').trim());
+        }
+        // Stop at next major section
+        else if (line.startsWith('### Requirement') || line.startsWith('### ') || line.startsWith('## ')) {
+          inAcceptanceCriteria = false;
+        }
       }
     }
 
@@ -356,6 +371,7 @@ export class SpecParser {
       requirements.push(currentRequirement);
     }
 
+    console.log(`Extracted ${requirements.length} requirements:`, requirements.map(r => `${r.id}: ${r.title}`));
     return requirements;
   }
 
