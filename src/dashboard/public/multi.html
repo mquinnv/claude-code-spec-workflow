@@ -97,15 +97,13 @@
       <main class="flex-1 overflow-y-auto">
         <!-- Active Tasks View -->
         <div v-if="activeTab === 'active'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Currently Active Tasks</h2>
-          
           <div v-if="activeTasks.length === 0" class="text-center py-12">
             <i class="fas fa-bolt text-4xl text-gray-400 dark:text-gray-600 mb-4"></i>
             <p class="text-gray-500 dark:text-gray-400">No tasks currently being worked on in active Claude sessions</p>
             <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Tasks marked as "In Progress" in active sessions will appear here</p>
           </div>
           
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-6">
             <div
               v-for="activeTask in activeTasks"
               :key="`${activeTask.projectPath}-${activeTask.specName}-${activeTask.task.id}`"
@@ -114,29 +112,47 @@
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
-                  <!-- Task Header -->
-                  <div class="flex items-center gap-2 mb-2">
-                    <span v-if="activeTask.isCurrentlyActive" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" title="Currently active"></span>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                      Task {{ activeTask.task.id }}: {{ activeTask.task.description }}
+                  <!-- Project/Spec Names - Prominent -->
+                  <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span v-if="activeTask.isCurrentlyActive" class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" title="Currently active"></span>
+                      <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                        <a 
+                          @click="selectProjectFromTask(activeTask.projectPath)"
+                          class="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
+                        >
+                          {{ activeTask.projectName }}
+                        </a>
+                      </h2>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 ml-5">
+                      {{ activeTask.specDisplayName }}
                     </h3>
                   </div>
                   
-                  <!-- Project/Spec Info -->
-                  <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    <span class="flex items-center gap-1">
-                      <i class="fas fa-folder"></i>
-                      <a 
-                        @click="selectProjectFromTask(activeTask.projectPath)"
-                        class="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
-                      >
-                        {{ activeTask.projectName }}
-                      </a>
-                    </span>
-                    <span class="flex items-center gap-1">
-                      <i class="fas fa-file-alt"></i>
-                      {{ activeTask.specDisplayName }}
-                    </span>
+                  <!-- Task Progress -->
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Task {{ getTaskNumber(activeTask) }} of {{ getSpecTaskCount(activeTask) }}
+                      </span>
+                      <span class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ Math.round(getSpecProgress(activeTask)) }}% complete
+                      </span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                      <div 
+                        class="bg-indigo-600 dark:bg-indigo-500 h-2.5 rounded-full transition-all duration-300"
+                        :style="`width: ${getSpecProgress(activeTask)}%`"
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <!-- Current Task -->
+                  <div class="mb-3">
+                    <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">
+                      Current Task: {{ activeTask.task.description }}
+                    </h4>
                   </div>
                   
                   <!-- Task Details -->

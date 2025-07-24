@@ -256,4 +256,34 @@ PetiteVue.createApp({
       this.selectedProject = project;
     }
   },
+
+  // Helper methods for active task display
+  getTaskNumber(activeTask) {
+    // Extract numeric part from task ID (e.g., "2.1" -> 2.1, "5" -> 5)
+    const taskId = activeTask.task.id;
+    return typeof taskId === 'string' ? parseFloat(taskId) : taskId;
+  },
+
+  getSpecTaskCount(activeTask) {
+    // Find the project and spec to get total task count
+    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    if (!project) return 0;
+    
+    const spec = project.specs.find(s => s.name === activeTask.specName);
+    return spec?.tasks?.total || 0;
+  },
+
+  getSpecProgress(activeTask) {
+    // Find the project and spec to calculate progress
+    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    if (!project) return 0;
+    
+    const spec = project.specs.find(s => s.name === activeTask.specName);
+    if (!spec?.tasks) return 0;
+    
+    const completed = spec.tasks.completed || 0;
+    const total = spec.tasks.total || 0;
+    
+    return total > 0 ? (completed / total) * 100 : 0;
+  },
 }).mount('#app');
