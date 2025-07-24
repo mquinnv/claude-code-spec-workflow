@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spec Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Suppress Tailwind CDN production warning for development dashboard
+      if (typeof tailwind !== 'undefined') {
+        tailwind.config = { devtools: { enabled: false } };
+      }
+    </script>
     <script src="https://unpkg.com/petite-vue@0.4.1/dist/petite-vue.iife.js"></script>
     <link
       rel="stylesheet"

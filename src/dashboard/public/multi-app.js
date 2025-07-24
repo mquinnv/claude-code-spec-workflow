@@ -323,17 +323,17 @@ PetiteVue.createApp({
   },
 
   // Requirements expansion state management
-  expandedRequirements: new Set(),
+  expandedRequirements: {},
 
   toggleRequirementsExpanded(specName) {
-    if (this.expandedRequirements.has(specName)) {
-      this.expandedRequirements.delete(specName);
+    if (this.expandedRequirements[specName]) {
+      delete this.expandedRequirements[specName];
     } else {
-      this.expandedRequirements.add(specName);
+      this.expandedRequirements[specName] = true;
     }
   },
 
   isRequirementsExpanded(specName) {
-    return this.expandedRequirements.has(specName);
+    return !!this.expandedRequirements[specName];
   },
 }).mount('#app');
