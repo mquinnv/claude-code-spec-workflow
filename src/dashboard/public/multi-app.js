@@ -286,4 +286,23 @@ PetiteVue.createApp({
     
     return total > 0 ? (completed / total) * 100 : 0;
   },
+
+  getNextTask(activeTask) {
+    // Find the project and spec to get next task
+    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    if (!project) return null;
+    
+    const spec = project.specs.find(s => s.name === activeTask.specName);
+    if (!spec?.tasks?.taskList) return null;
+    
+    const tasks = spec.tasks.taskList;
+    const currentTaskId = activeTask.task.id;
+    
+    // Find the index of the current task
+    const currentIndex = tasks.findIndex(task => task.id === currentTaskId);
+    if (currentIndex === -1 || currentIndex >= tasks.length - 1) return null;
+    
+    // Return the next task in the list
+    return tasks[currentIndex + 1];
+  },
 }).mount('#app');

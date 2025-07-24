@@ -155,6 +155,16 @@
                     </h4>
                   </div>
                   
+                  <!-- Next Task -->
+                  <div v-if="getNextTask(activeTask)" class="mb-3">
+                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Next Up:
+                    </h5>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                      Task {{ getNextTask(activeTask).id }}: {{ getNextTask(activeTask).description }}
+                    </p>
+                  </div>
+                  
                   <!-- Task Details -->
                   <div class="space-y-1">
                     <div v-if="activeTask.task.requirements && activeTask.task.requirements.length > 0" class="text-sm text-gray-600 dark:text-gray-400">
