@@ -109,6 +109,13 @@ export class SpecParser {
     const requirementsPath = join(specPath, 'requirements.md');
     if (await this.fileExists(requirementsPath)) {
       const content = await readFile(requirementsPath, 'utf-8');
+      
+      // Try to extract title from the first heading
+      const titleMatch = content.match(/^# (.+?)(?:\s+Requirements)?$/m);
+      if (titleMatch) {
+        spec.displayName = titleMatch[1].trim();
+      }
+      
       spec.requirements = {
         exists: true,
         userStories: (content.match(/(\*\*User Story:\*\*|## User Story \d+)/g) || []).length,

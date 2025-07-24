@@ -128,19 +128,16 @@
                           @click="selectProjectFromTask(activeTask.projectPath, activeTask.specName)"
                           class="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
                         >
-                          {{ activeTask.projectName }}
+                          {{ activeTask.projectName }}: {{ activeTask.specDisplayName }}
                         </a>
                       </h2>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 ml-5">
-                      {{ activeTask.specDisplayName }}
-                    </h3>
                   </div>
                   
                   <!-- Current Task -->
                   <div class="mb-4">
                     <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">
-                      Current Task: {{ activeTask.task.id }} {{ activeTask.task.description }}
+                      Current Task: {{ activeTask.task.description }}
                     </h4>
                   </div>
                   
