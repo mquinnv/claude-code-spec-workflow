@@ -101,7 +101,7 @@ export class SpecParser {
         exists: true,
         userStories: (content.match(/(\*\*User Story:\*\*|## User Story \d+)/g) || []).length,
         approved: content.includes('✅ APPROVED') || content.includes('**Approved:** ✓'),
-        content: this.extractUserStories(content),
+        content: this.extractRequirements(content),
       };
       // Set initial status
       spec.status = 'requirements';
@@ -287,34 +287,76 @@ export class SpecParser {
       .join(' ');
   }
 
+  private extractRequirements(content: string): string[] {
+    const requirements: string[] = [];
+    const lines = content.split('\n');
+    let currentRequirement = '';
+    let inRequirementSection = false;
+
+    for (const line of lines) {
+      // Check if line contains a numbered requirement
+      if (line.match(/^### Requirement \d+:/)) {
+        if (currentRequirement) {
+          requirements.push(currentRequirement.trim());
+        }
+        // Extract the requirement title
+        currentRequirement = line.replace(/^### /, '').trim();
+        inRequirementSection = true;
+      } else if (inRequirementSection && line.trim()) {
+        // Stop at next major section or next requirement
+        if (line.startsWith('### Requirement') || line.startsWith('## ') || line.startsWith('#')) {
+          if (currentRequirement) {
+            requirements.push(currentRequirement.trim());
+            currentRequirement = '';
+          }
+          // If this line is another requirement, process it
+          if (line.match(/^### Requirement \d+:/)) {
+            currentRequirement = line.replace(/^### /, '').trim();
+          } else {
+            inRequirementSection = false;
+          }
+        }
+      }
+    }
+
+    // Don't forget the last requirement
+    if (currentRequirement) {
+      requirements.push(currentRequirement.trim());
+    }
+
+    return requirements;
+  }
+
   private extractUserStories(content: string): string[] {
     const stories: string[] = [];
     const lines = content.split('\n');
     let currentStory = '';
-    let inStory = false;
+    let inStorySection = false;
 
     for (const line of lines) {
-      // Check if line starts a user story
-      if (line.includes('**User Story:**') || line.match(/^## User Story \d+/)) {
+      // Check if line contains a user story
+      if (line.includes('**User Story:**')) {
         if (currentStory) {
           stories.push(currentStory.trim());
         }
-        currentStory = line.replace(/^\#*\s*/, '').replace('**User Story:**', '').trim();
-        inStory = true;
-      } else if (inStory && line.trim()) {
-        // Continue collecting story content until we hit another section or empty line
-        if (line.startsWith('#') || line.includes('**')) {
-          if (line.includes('**As a**') || line.includes('**I want**') || line.includes('**So that**')) {
-            currentStory += ' ' + line.replace(/\*\*/g, '').trim();
-          } else {
-            // Hit a new section, finish current story
-            if (currentStory) {
-              stories.push(currentStory.trim());
-              currentStory = '';
-              inStory = false;
-            }
+        // Extract the story content after "**User Story:**"
+        currentStory = line.replace('**User Story:**', '').trim();
+        inStorySection = true;
+      } else if (inStorySection && line.trim()) {
+        // Stop at next major section (### or ##) or next user story
+        if (line.startsWith('###') || line.startsWith('##') || line.includes('**User Story:**')) {
+          if (currentStory) {
+            stories.push(currentStory.trim());
+            currentStory = '';
           }
-        } else if (line.trim()) {
+          // If this line is another user story, process it
+          if (line.includes('**User Story:**')) {
+            currentStory = line.replace('**User Story:**', '').trim();
+          } else {
+            inStorySection = false;
+          }
+        } else if (!line.startsWith('#') && line.trim()) {
+          // Continue building the story if it's not a heading
           currentStory += ' ' + line.trim();
         }
       }
@@ -325,7 +367,7 @@ export class SpecParser {
       stories.push(currentStory.trim());
     }
 
-    return stories.slice(0, 3); // Limit to first 3 stories for display
+    return stories; // Return all stories
   }
 
   private extractCodeReuseAnalysis(content: string): string[] {
@@ -365,7 +407,7 @@ export class SpecParser {
       analysis.push(currentItem.trim());
     }
 
-    return analysis.slice(0, 4); // Limit to first 4 items for display
+    return analysis; // Return all analysis items
   }
 
   private async fileExists(path: string): Promise<boolean> {
