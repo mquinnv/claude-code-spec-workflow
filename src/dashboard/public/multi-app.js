@@ -24,7 +24,8 @@ PetiteVue.createApp({
   },
 
   connectWebSocket() {
-    const wsUrl = `ws://${window.location.host}/ws`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
@@ -55,6 +56,7 @@ PetiteVue.createApp({
         this.projects = Array.isArray(message.data) ? this.normalizeProjects(message.data) : [];
         this.activeTasks = Array.isArray(message.activeTasks) ? message.activeTasks : [];
         this.username = message.username || 'User';
+        
         console.log(`Received initial data: ${this.projects.length} projects, ${this.activeTasks.length} active tasks`);
         // Sort projects: active first, then by activity
         this.sortProjects();
@@ -324,6 +326,7 @@ PetiteVue.createApp({
 
   // Requirements expansion state management
   expandedRequirements: {},
+  expandedDesign: {},
 
   toggleRequirementsExpanded(specName) {
     if (this.expandedRequirements[specName]) {
@@ -337,19 +340,55 @@ PetiteVue.createApp({
     return !!this.expandedRequirements[specName];
   },
 
+  toggleDesignExpanded(specName) {
+    if (this.expandedDesign[specName]) {
+      delete this.expandedDesign[specName];
+    } else {
+      this.expandedDesign[specName] = true;
+    }
+  },
+
+  isDesignExpanded(specName) {
+    return !!this.expandedDesign[specName];
+  },
+
   // Normalize project data to handle potential JSON serialization issues
   normalizeProjects(projects) {
     return projects.map(project => {
       if (project.specs) {
         project.specs = project.specs.map(spec => {
-          // Ensure requirements content is properly parsed
+          // Ensure requirements content is properly handled
           if (spec.requirements && spec.requirements.content) {
-            if (typeof spec.requirements.content === 'string') {
+            // If it's already an array of proper objects, keep it as is
+            if (Array.isArray(spec.requirements.content) && 
+                spec.requirements.content.length > 0 && 
+                typeof spec.requirements.content[0] === 'object' &&
+                spec.requirements.content[0].id && 
+                spec.requirements.content[0].title) {
+              // Data is already in correct format
+            }
+            // If it's a string, try to parse it
+            else if (typeof spec.requirements.content === 'string') {
               try {
                 spec.requirements.content = JSON.parse(spec.requirements.content);
               } catch (e) {
                 console.warn('Failed to parse requirements content:', e);
+                // Keep as string if parsing fails
               }
+            }
+            // If it's an array but contains strings, try to parse each item
+            else if (Array.isArray(spec.requirements.content)) {
+              spec.requirements.content = spec.requirements.content.map((item, index) => {
+                if (typeof item === 'string') {
+                  try {
+                    return JSON.parse(item);
+                  } catch (e) {
+                    console.warn(`Failed to parse requirement item ${index}:`, item, e);
+                    return { id: String(index + 1), title: item, acceptanceCriteria: [] };
+                  }
+                }
+                return item;
+              });
             }
           }
           

@@ -137,8 +137,15 @@
                     </h3>
                   </div>
                   
-                  <!-- Task Progress -->
+                  <!-- Current Task -->
                   <div class="mb-4">
+                    <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">
+                      Current Task: {{ activeTask.task.id }} {{ activeTask.task.description }}
+                    </h4>
+                  </div>
+                  
+                  <!-- Task Progress -->
+                  <div class="mb-3">
                     <div class="flex items-center justify-between mb-2">
                       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Task {{ getTaskNumber(activeTask) }} of {{ getSpecTaskCount(activeTask) }}
@@ -153,13 +160,6 @@
                         :style="`width: ${getSpecProgress(activeTask)}%`"
                       ></div>
                     </div>
-                  </div>
-                  
-                  <!-- Current Task -->
-                  <div class="mb-3">
-                    <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">
-                      Current Task: Task {{ activeTask.task.id }}: {{ activeTask.task.description }}
-                    </h4>
                   </div>
                   
                   <!-- Next Task -->
@@ -182,35 +182,6 @@
                     </span>
                   </div>
 
-                  <!-- Spec Requirements -->
-                  <div v-if="getSpecData(activeTask)?.requirements?.content?.length > 0" class="mt-4">
-                    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <i class="fas fa-file-alt mr-1"></i>
-                      User Stories
-                    </h6>
-                    <div class="space-y-1">
-                      <div 
-                        v-for="story in getSpecData(activeTask).requirements.content" 
-                        :key="story"
-                        class="text-sm text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-gray-200 dark:border-gray-600"
-                      >
-                        {{ story }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Code Reuse Analysis -->
-                  <div v-if="getSpecData(activeTask)?.design?.codeReuseContent?.length > 0" class="mt-4">
-                    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <i class="fas fa-recycle mr-1"></i>
-                      Code Reuse Analysis
-                    </h6>
-                    <div class="text-sm text-green-600 dark:text-green-400">
-                      <span v-for="(category, categoryIndex) in getSpecData(activeTask).design.codeReuseContent" :key="category.title">
-                        <strong>{{ category.title }}:</strong> {{ category.items.join(', ') }}<span v-if="categoryIndex < getSpecData(activeTask).design.codeReuseContent.length - 1"> | </span>
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 
                 <div class="ml-4">
@@ -325,31 +296,34 @@
                         </div>
                         
                         <!-- Collapsed view - just requirement titles -->
-                        <div v-if="spec.requirements.content && spec.requirements.content.length > 0 && !isRequirementsExpanded(spec.name)" class="space-y-1">
+                        <div v-if="spec.requirements.content && Array.isArray(spec.requirements.content) && spec.requirements.content.length > 0 && !isRequirementsExpanded(spec.name)" class="space-y-1">
                           <div 
-                            v-for="requirement in spec.requirements.content" 
-                            :key="requirement.id || requirement"
+                            v-for="(requirement, index) in spec.requirements.content" 
+                            :key="(requirement && requirement.id) || index"
                             class="text-xs text-gray-600 dark:text-gray-400 pl-2 border-l-2 border-gray-200 dark:border-gray-600"
                           >
-                            <template v-if="typeof requirement === 'object' && requirement.id">
-                              <strong>{{ requirement.id }}:</strong> {{ requirement.title }}
-                            </template>
-                            <template v-else>
+                            <span v-if="requirement && requirement.id">
+                              <strong>{{ requirement.id }}:</strong> {{ requirement.title || 'No title' }}
+                            </span>
+                            <span v-else-if="typeof requirement === 'string'">
                               {{ requirement }}
-                            </template>
+                            </span>
+                            <span v-else>
+                              {{ JSON.stringify(requirement) }}
+                            </span>
                           </div>
                         </div>
 
                         <!-- Expanded view - full details -->
                         <div v-if="spec.requirements.content && spec.requirements.content.length > 0 && isRequirementsExpanded(spec.name)" class="space-y-3">
                           <div 
-                            v-for="requirement in spec.requirements.content" 
-                            :key="requirement.id || requirement"
+                            v-for="(requirement, index) in spec.requirements.content" 
+                            :key="(requirement && requirement.id) || index"
                             class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
                           >
-                            <template v-if="typeof requirement === 'object' && requirement.id">
+                            <div v-if="requirement && requirement.id">
                               <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                <strong>Requirement {{ requirement.id }}:</strong> {{ requirement.title }}
+                                <strong>Requirement {{ requirement.id }}:</strong> {{ requirement.title || 'No title' }}
                               </h5>
                               <div v-if="requirement.userStory" class="text-xs text-blue-600 dark:text-blue-400 mb-2 italic">
                                 {{ requirement.userStory }}
@@ -363,12 +337,13 @@
                                   </li>
                                 </ul>
                               </div>
-                            </template>
-                            <template v-else>
-                              <div class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ requirement }}
-                              </div>
-                            </template>
+                            </div>
+                            <div v-else-if="typeof requirement === 'string'" class="text-xs text-gray-600 dark:text-gray-400">
+                              {{ requirement }}
+                            </div>
+                            <div v-else class="text-xs text-gray-600 dark:text-gray-400">
+                              <pre>{{ JSON.stringify(requirement, null, 2) }}</pre>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -379,17 +354,28 @@
                         <i class="fas fa-drafting-compass mr-1"></i> Design
                       </h4>
                       <div v-if="spec.design" class="text-sm text-gray-600 dark:text-gray-400">
-                        <p class="flex items-center mb-2">
-                          <i
-                            class="fas mr-1"
-                            :class="spec.design.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
-                          ></i>
-                          {{ spec.design.approved ? 'Approved' : 'Pending' }} - 
-                          <span :class="spec.design.hasCodeReuseAnalysis ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                            {{ spec.design.hasCodeReuseAnalysis ? 'Has' : 'Missing' }} code reuse analysis
-                          </span>
-                        </p>
-                        <div v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0" class="space-y-2 mt-2">
+                        <div class="flex items-center justify-between mb-2">
+                          <p class="flex items-center">
+                            <i
+                              class="fas mr-1"
+                              :class="spec.design.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
+                            ></i>
+                            {{ spec.design.approved ? 'Approved' : 'Pending' }} - 
+                            <span :class="spec.design.hasCodeReuseAnalysis ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                              {{ spec.design.hasCodeReuseAnalysis ? 'Has' : 'Missing' }} code reuse analysis
+                            </span>
+                          </p>
+                          <button 
+                            v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0"
+                            @click.stop="toggleDesignExpanded(spec.name)"
+                            class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center"
+                          >
+                            <i class="fas mr-1" :class="isDesignExpanded(spec.name) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            {{ isDesignExpanded(spec.name) ? 'Collapse' : 'Expand Details' }}
+                          </button>
+                        </div>
+                        
+                        <div v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0 && isDesignExpanded(spec.name)" class="space-y-2 mt-2">
                           <div 
                             v-for="category in spec.design.codeReuseContent" 
                             :key="category.title"
@@ -413,19 +399,15 @@
 
                   <!-- Task list -->
                   <div v-if="spec.tasks && spec.tasks.taskList.length > 0" class="mt-4">
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="mb-2">
                       <h4 class="font-medium text-gray-700 dark:text-gray-300">
-                        <i class="fas fa-tasks mr-1"></i> Task Breakdown ({{ spec.tasks.total }} tasks)
-                      </h4>
-                      <span class="flex items-center text-sm">
+                        <i class="fas fa-tasks mr-1"></i> Tasks ({{ spec.tasks.total }} tasks - 
                         <i
                           class="fas mr-1"
                           :class="spec.tasks.approved ? 'fa-check-circle text-green-500' : 'fa-clock text-yellow-500'"
                         ></i>
-                        <span :class="spec.tasks.approved ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
-                          {{ spec.tasks.approved ? 'Approved' : 'Pending' }}
-                        </span>
-                      </span>
+                        {{ spec.tasks.approved ? 'Approved' : 'Pending' }})
+                      </h4>
                     </div>
                     <div class="space-y-1">
                       <div
