@@ -25,10 +25,10 @@ export class SpecWatcher extends EventEmitter {
     const specsPath = join(this.projectPath, '.claude', 'specs');
 
     console.log(`[Watcher] Starting to watch: ${specsPath}`);
-    
+
     // Try to use FSEvents on macOS, fall back to polling if needed
     const isMacOS = process.platform === 'darwin';
-    
+
     this.watcher = watch('.', {
       cwd: specsPath,
       ignored: /(^|[\\/])\.DS_Store/, // Only ignore .DS_Store
@@ -46,7 +46,7 @@ export class SpecWatcher extends EventEmitter {
       followSymlinks: true,
       // Emit all events
       ignorePermissionErrors: false,
-      atomic: true
+      atomic: true,
     });
 
     this.watcher
@@ -94,12 +94,12 @@ export class SpecWatcher extends EventEmitter {
     if (parts.length === 2 && parts[1].match(/^(requirements|design|tasks)\.md$/)) {
       // Add a small delay to ensure file write is complete
       if (type === 'changed') {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       const spec = await this.parser.getSpec(specName);
       console.log(`Emitting change for spec: ${specName}, file: ${parts[1]}`);
-      
+
       // Log approval status for debugging
       if (parts[1] === 'tasks.md' && spec && spec.tasks) {
         console.log(`Tasks approved: ${spec.tasks.approved}`);
@@ -118,7 +118,7 @@ export class SpecWatcher extends EventEmitter {
     // When a new directory is created, check for any .md files already in it
     const specName = dirPath;
     const spec = await this.parser.getSpec(specName);
-    
+
     if (spec) {
       console.log(`Found spec in new directory: ${specName}`);
       this.emit('change', {

@@ -36,7 +36,9 @@ program
 
         await server.start();
 
-        spinner.succeed(chalk.green(`Multi-project dashboard running at http://localhost:${options.port}`));
+        spinner.succeed(
+          chalk.green(`Multi-project dashboard running at http://localhost:${options.port}`)
+        );
         console.log();
         console.log(chalk.gray('Press Ctrl+C to stop the server'));
         console.log();
@@ -44,12 +46,12 @@ program
         // Handle graceful shutdown
         process.on('SIGINT', async () => {
           console.log(chalk.yellow('\n\nShutting down dashboard...'));
-          
+
           const forceExitTimeout = setTimeout(() => {
             console.log(chalk.red('Force exiting...'));
             process.exit(1);
           }, 5000);
-          
+
           try {
             await server.stop();
             clearTimeout(forceExitTimeout);
@@ -98,25 +100,25 @@ program
         console.log(chalk.gray('Press Ctrl+C to stop the server'));
         console.log();
 
-      // Handle graceful shutdown
-      process.on('SIGINT', async () => {
-        console.log(chalk.yellow('\n\nShutting down dashboard...'));
-        
-        // Set a timeout to force exit if graceful shutdown hangs
-        const forceExitTimeout = setTimeout(() => {
-          console.log(chalk.red('Force exiting...'));
-          process.exit(1);
-        }, 5000); // 5 second timeout
-        
-        try {
-          await server.stop();
-          clearTimeout(forceExitTimeout);
-          process.exit(0);
-        } catch (error) {
-          console.error(chalk.red('Error during shutdown:'), error);
-          process.exit(1);
-        }
-      });
+        // Handle graceful shutdown
+        process.on('SIGINT', async () => {
+          console.log(chalk.yellow('\n\nShutting down dashboard...'));
+
+          // Set a timeout to force exit if graceful shutdown hangs
+          const forceExitTimeout = setTimeout(() => {
+            console.log(chalk.red('Force exiting...'));
+            process.exit(1);
+          }, 5000); // 5 second timeout
+
+          try {
+            await server.stop();
+            clearTimeout(forceExitTimeout);
+            process.exit(0);
+          } catch (error) {
+            console.error(chalk.red('Error during shutdown:'), error);
+            process.exit(1);
+          }
+        });
       } catch (error) {
         spinner.fail('Failed to start dashboard');
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);

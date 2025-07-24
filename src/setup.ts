@@ -179,7 +179,6 @@ export class SpecWorkflowSetup {
     }
   }
 
-
   async runSetup(): Promise<void> {
     await this.setupDirectories();
     await this.createSlashCommands();

@@ -55,8 +55,8 @@ export class MultiProjectDashboardServer {
     console.log(`Found ${discoveredProjects.length} projects with .claude directories`);
 
     // Filter to show projects with specs OR active Claude sessions
-    const activeProjects = discoveredProjects.filter(p => 
-      (p.specCount || 0) > 0 || p.hasActiveSession
+    const activeProjects = discoveredProjects.filter(
+      (p) => (p.specCount || 0) > 0 || p.hasActiveSession
     );
     console.log(`${activeProjects.length} projects have specs or active sessions`);
 
@@ -103,9 +103,9 @@ export class MultiProjectDashboardServer {
 
     // API endpoints
     this.app.get('/api/projects', async () => {
-      const projectList = Array.from(this.projects.values()).map(p => ({
+      const projectList = Array.from(this.projects.values()).map((p) => ({
         ...p.project,
-        specs: []  // Don't include specs in list
+        specs: [], // Don't include specs in list
       }));
       return projectList;
     });
@@ -114,12 +114,12 @@ export class MultiProjectDashboardServer {
       const { projectPath } = request.params as { projectPath: string };
       const decodedPath = decodeURIComponent(projectPath);
       const projectState = this.projects.get(decodedPath);
-      
+
       if (!projectState) {
         reply.code(404).send({ error: 'Project not found' });
         return;
       }
-      
+
       const specs = await projectState.parser.getAllSpecs();
       return specs;
     });
@@ -204,20 +204,20 @@ export class MultiProjectDashboardServer {
 
   private async collectActiveTasks(): Promise<ActiveTask[]> {
     const activeTasks: ActiveTask[] = [];
-    
+
     for (const [projectPath, state] of this.projects) {
       // Only collect tasks from projects with active Claude sessions
       if (!state.project.hasActiveSession) {
         continue;
       }
-      
+
       const specs = await state.parser.getAllSpecs();
-      
+
       for (const spec of specs) {
         if (spec.tasks && spec.tasks.taskList.length > 0 && spec.tasks.inProgress) {
           // Only get the currently active task (marked as in progress)
           const activeTask = this.findTaskById(spec.tasks.taskList, spec.tasks.inProgress);
-          
+
           if (activeTask) {
             activeTasks.push({
               projectPath,
@@ -232,14 +232,14 @@ export class MultiProjectDashboardServer {
         }
       }
     }
-    
+
     // Sort by currently active first, then by project name
     activeTasks.sort((a, b) => {
       if (a.isCurrentlyActive && !b.isCurrentlyActive) return -1;
       if (!a.isCurrentlyActive && b.isCurrentlyActive) return 1;
       return a.projectName.localeCompare(b.projectName);
     });
-    
+
     return activeTasks;
   }
 
@@ -248,7 +248,7 @@ export class MultiProjectDashboardServer {
       if (task.id === taskId) {
         return task;
       }
-      
+
       if (task.subtasks) {
         const found = this.findTaskById(task.subtasks, taskId);
         if (found) {
@@ -256,7 +256,7 @@ export class MultiProjectDashboardServer {
         }
       }
     }
-    
+
     return null;
   }
 
@@ -264,8 +264,8 @@ export class MultiProjectDashboardServer {
     // Rescan every 30 seconds for new active projects
     this.rescanInterval = setInterval(async () => {
       const currentProjects = await this.discovery.discoverProjects();
-      const activeProjects = currentProjects.filter(p => 
-        (p.specCount || 0) > 0 || p.hasActiveSession
+      const activeProjects = currentProjects.filter(
+        (p) => (p.specCount || 0) > 0 || p.hasActiveSession
       );
 
       // Check for new projects
@@ -273,11 +273,11 @@ export class MultiProjectDashboardServer {
         if (!this.projects.has(project.path)) {
           console.log(`New active project detected: ${project.name}`);
           await this.initializeProject(project);
-          
+
           // Notify all clients about the new project
-          const specs = await this.projects.get(project.path)?.parser.getAllSpecs() || [];
+          const specs = (await this.projects.get(project.path)?.parser.getAllSpecs()) || [];
           const projectData = { ...project, specs };
-          
+
           const message = JSON.stringify({
             type: 'new-project',
             data: projectData,
@@ -293,17 +293,17 @@ export class MultiProjectDashboardServer {
 
       // Check for projects that are no longer active
       for (const [path, state] of this.projects) {
-        const stillActive = activeProjects.some(p => p.path === path);
+        const stillActive = activeProjects.some((p) => p.path === path);
         if (!stillActive) {
           const hasSpecs = (await state.parser.getAllSpecs()).length > 0;
-          const currentProject = activeProjects.find(p => p.path === path);
+          const currentProject = activeProjects.find((p) => p.path === path);
           const hasActiveSession = currentProject?.hasActiveSession || false;
-          
+
           if (!hasSpecs && !hasActiveSession) {
             console.log(`Project no longer active: ${state.project.name}`);
             await state.watcher.stop();
             this.projects.delete(path);
-            
+
             // Notify clients to remove the project
             const message = JSON.stringify({
               type: 'remove-project',

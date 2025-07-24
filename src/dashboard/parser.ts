@@ -68,7 +68,7 @@ export class SpecParser {
         // Specs directory doesn't exist, return empty array
         return [];
       }
-      
+
       console.log('Reading specs from:', this.specsPath);
       const dirs = await readdir(this.specsPath);
       console.log('Found directories:', dirs);
@@ -109,13 +109,13 @@ export class SpecParser {
     const requirementsPath = join(specPath, 'requirements.md');
     if (await this.fileExists(requirementsPath)) {
       const content = await readFile(requirementsPath, 'utf-8');
-      
+
       // Try to extract title from the first heading
       const titleMatch = content.match(/^# (.+?)(?:\s+Requirements)?$/m);
       if (titleMatch) {
         spec.displayName = titleMatch[1].trim();
       }
-      
+
       spec.requirements = {
         exists: true,
         userStories: (content.match(/(\*\*User Story:\*\*|## User Story \d+)/g) || []).length,
@@ -124,7 +124,7 @@ export class SpecParser {
       };
       // Set initial status
       spec.status = 'requirements';
-      
+
       // If requirements are approved, we move to design phase
       if (spec.requirements.approved) {
         spec.status = 'design';
@@ -154,11 +154,11 @@ export class SpecParser {
       const content = await readFile(tasksPath, 'utf-8');
       console.log('Tasks file content length:', content.length);
       console.log('Tasks file includes APPROVED:', content.includes('✅ APPROVED'));
-      
+
       const taskList = this.parseTasks(content);
       const completed = this.countCompletedTasks(taskList);
       const total = this.countTotalTasks(taskList);
-      
+
       console.log('Parsed task counts - Total:', total, 'Completed:', completed);
 
       spec.tasks = {
@@ -204,14 +204,14 @@ export class SpecParser {
     const tasks: Task[] = [];
     const lines = content.split('\n');
     console.log('Total lines:', lines.length);
-    
+
     // Let's test what the actual lines look like
     lines.slice(0, 20).forEach((line, i) => {
       if (line.includes('[') && line.includes(']')) {
         console.log(`Line ${i}: "${line}"`);
       }
     });
-    
+
     // Match the actual format: "- [x] 1. Create GraphQL queries..."
     const taskRegex = /^(\s*)- \[([ x])\] (\d+(?:\.\d+)*)\. (.+)$/;
     const requirementsRegex = /_Requirements: ([\d., ]+)/;
@@ -314,25 +314,25 @@ export class SpecParser {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Check if line contains a numbered requirement
       if (line.match(/^### Requirement \d+:/)) {
         // Save previous requirement
         if (currentRequirement) {
           requirements.push(currentRequirement);
         }
-        
+
         // Extract requirement number and title
         const match = line.match(/^### Requirement (\d+): (.+)/);
         if (match) {
           currentRequirement = {
             id: match[1],
             title: match[2].trim(),
-            acceptanceCriteria: []
+            acceptanceCriteria: [],
           };
         }
         inAcceptanceCriteria = false;
-      } 
+      }
       // Look for user story
       else if (currentRequirement && line.includes('**User Story:**')) {
         currentRequirement.userStory = line.replace('**User Story:**', '').trim();
@@ -430,7 +430,7 @@ export class SpecParser {
           // Start new category
           currentCategory = {
             title: categoryMatch[1].trim(),
-            items: []
+            items: [],
           };
         }
         // Look for bullet points under categories

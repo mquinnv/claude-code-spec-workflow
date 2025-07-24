@@ -33,15 +33,17 @@
     <script>
       // Configure Tailwind dark mode
       tailwind.config = {
-        darkMode: 'class'
-      }
+        darkMode: 'class',
+      };
     </script>
   </head>
   <body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors">
     <div id="app" v-cloak class="h-full" @vue:mounted="init()">
       <div class="min-h-full">
         <!-- Header -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
+        <header
+          class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors"
+        >
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-3">
               <div class="flex items-center gap-8">
@@ -53,42 +55,98 @@
                   <div class="flex items-center gap-1.5">
                     <i class="fas fa-file-alt text-gray-400 dark:text-gray-500"></i>
                     <span class="hidden md:inline text-gray-600 dark:text-gray-400">Specs:</span>
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ specs.length }}</span>
+                    <span class="font-semibold text-gray-900 dark:text-white"
+                      >{{ specs.length }}</span
+                    >
                   </div>
                   <div class="flex items-center gap-1.5">
                     <i class="fas fa-spinner text-indigo-400 dark:text-indigo-500"></i>
-                    <span class="hidden md:inline text-gray-600 dark:text-gray-400">In Progress:</span>
-                    <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ specsInProgress }}</span>
+                    <span class="hidden md:inline text-gray-600 dark:text-gray-400"
+                      >In Progress:</span
+                    >
+                    <span class="font-semibold text-indigo-600 dark:text-indigo-400"
+                      >{{ specsInProgress }}</span
+                    >
                   </div>
                   <div class="flex items-center gap-1.5">
                     <i class="fas fa-check-circle text-green-400 dark:text-green-500"></i>
-                    <span class="hidden md:inline text-gray-600 dark:text-gray-400">Completed:</span>
-                    <span class="font-semibold text-green-600 dark:text-green-400">{{ specsCompleted }}</span>
+                    <span class="hidden md:inline text-gray-600 dark:text-gray-400"
+                      >Completed:</span
+                    >
+                    <span class="font-semibold text-green-600 dark:text-green-400"
+                      >{{ specsCompleted }}</span
+                    >
                   </div>
                   <div class="flex items-center gap-1.5">
                     <i class="fas fa-tasks text-gray-400 dark:text-gray-500"></i>
                     <span class="hidden md:inline text-gray-600 dark:text-gray-400">Tasks:</span>
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ totalTasks }}</span>
+                    <span class="font-semibold text-gray-900 dark:text-white"
+                      >{{ totalTasks }}</span
+                    >
                   </div>
                 </div>
               </div>
               <div class="flex items-center gap-3">
                 <!-- Theme toggle -->
-                <button @click="cycleTheme" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Toggle theme">
-                  <svg v-if="theme === 'light'" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                <button
+                  @click="cycleTheme"
+                  class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Toggle theme"
+                >
+                  <svg
+                    v-if="theme === 'light'"
+                    class="w-5 h-5 text-gray-600 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    ></path>
                   </svg>
-                  <svg v-else-if="theme === 'dark'" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                  <svg
+                    v-else-if="theme === 'dark'"
+                    class="w-5 h-5 text-gray-600 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                    ></path>
                   </svg>
-                  <svg v-else class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  <svg
+                    v-else
+                    class="w-5 h-5 text-gray-600 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    ></path>
                   </svg>
                 </button>
-                <i class="fas fa-circle text-xs" 
-                   :class="connected ? 'text-green-500' : 'text-red-500'"
-                   :title="connected ? 'Connected' : 'Disconnected'"></i>
-                <button v-if="!connected" @click="refresh" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" title="Refresh">
+                <i
+                  class="fas fa-circle text-xs"
+                  :class="connected ? 'text-green-500' : 'text-red-500'"
+                  :title="connected ? 'Connected' : 'Disconnected'"
+                ></i>
+                <button
+                  v-if="!connected"
+                  @click="refresh"
+                  class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  title="Refresh"
+                >
                   <i class="fas fa-sync-alt"></i>
                 </button>
               </div>
@@ -98,7 +156,6 @@
 
         <!-- Main content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
           <!-- Specs list -->
           <div class="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors">
             <div class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -110,8 +167,12 @@
               >
                 <div class="flex items-center justify-between">
                   <div class="flex-1">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ spec.displayName }}</h3>
-                    <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                      {{ spec.displayName }}
+                    </h3>
+                    <div
+                      class="mt-1 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400"
+                    >
                       <span>
                         <i class="fas fa-clock mr-1"></i>
                         {{ formatDate(spec.lastModified) }}
@@ -152,7 +213,10 @@
                       <h4 class="font-medium text-gray-900 dark:text-white mb-2">
                         <i class="fas fa-clipboard-list mr-1"></i> Requirements
                       </h4>
-                      <div v-if="spec.requirements" class="text-sm text-gray-600 dark:text-gray-400">
+                      <div
+                        v-if="spec.requirements"
+                        class="text-sm text-gray-600 dark:text-gray-400"
+                      >
                         <p>{{ spec.requirements.userStories }} user stories</p>
                         <p class="flex items-center mt-1">
                           <i
@@ -206,7 +270,9 @@
 
                   <!-- Task list -->
                   <div v-if="spec.tasks && spec.tasks.taskList.length > 0" class="mt-4">
-                    <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Task Breakdown</h4>
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Task Breakdown
+                    </h4>
                     <div class="space-y-1">
                       <div
                         v-for="task in spec.tasks.taskList"
@@ -220,8 +286,12 @@
                         ></i>
                         <div class="flex-1">
                           <div class="flex items-center">
-                            <span class="font-medium text-sm text-gray-900 dark:text-gray-200">Task {{ task.id }}:</span>
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ task.description }}</span>
+                            <span class="font-medium text-sm text-gray-900 dark:text-gray-200"
+                              >Task {{ task.id }}:</span
+                            >
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                              >{{ task.description }}</span
+                            >
                             <span
                               v-if="spec.tasks.inProgress === task.id"
                               class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-500 dark:text-yellow-900"
@@ -235,7 +305,10 @@
                           >
                             Requirements: {{ task.requirements.join(', ') }}
                           </div>
-                          <div v-if="task.leverage" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          <div
+                            v-if="task.leverage"
+                            class="text-xs text-blue-600 dark:text-blue-400 mt-1"
+                          >
                             <i class="fas fa-code-branch mr-1"></i> Leverage: {{ task.leverage }}
                           </div>
                         </div>

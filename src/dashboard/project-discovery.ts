@@ -16,7 +16,7 @@ export interface DiscoveredProject {
 
 export class ProjectDiscovery {
   private searchPaths: string[] = [];
-  
+
   constructor() {
     // Common project directories
     this.searchPaths = [
@@ -33,7 +33,7 @@ export class ProjectDiscovery {
   async discoverProjects(): Promise<DiscoveredProject[]> {
     const projects: DiscoveredProject[] = [];
     const activeClaudes = await this.getActiveClaudeSessions();
-    
+
     // Search for .claude directories
     for (const searchPath of this.searchPaths) {
       try {
@@ -44,32 +44,37 @@ export class ProjectDiscovery {
         // Directory doesn't exist, skip it
       }
     }
-    
+
     // Sort by last activity
     projects.sort((a, b) => {
       const dateA = a.lastActivity?.getTime() || 0;
       const dateB = b.lastActivity?.getTime() || 0;
       return dateB - dateA;
     });
-    
+
     return projects;
   }
 
-  private async searchDirectory(dir: string, activeSessions: string[], depth = 0): Promise<DiscoveredProject[]> {
+  private async searchDirectory(
+    dir: string,
+    activeSessions: string[],
+    depth = 0
+  ): Promise<DiscoveredProject[]> {
     if (depth > 3) return []; // Don't go too deep
-    
+
     const projects: DiscoveredProject[] = [];
-    
+
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
         if (entry.name.startsWith('.') && entry.name !== '.claude') continue;
-        if (entry.name === 'node_modules' || entry.name === 'venv' || entry.name === '__pycache__') continue;
-        
+        if (entry.name === 'node_modules' || entry.name === 'venv' || entry.name === '__pycache__')
+          continue;
+
         const fullPath = join(dir, entry.name);
-        
+
         // Check if this directory has a .claude folder
         const claudePath = join(fullPath, '.claude');
         try {
@@ -89,22 +94,26 @@ export class ProjectDiscovery {
     } catch (error) {
       console.error(`Error searching directory ${dir}:`, error);
     }
-    
+
     return projects;
   }
 
-  private async analyzeProject(projectPath: string, claudePath: string, activeSessions: string[]): Promise<DiscoveredProject> {
+  private async analyzeProject(
+    projectPath: string,
+    claudePath: string,
+    activeSessions: string[]
+  ): Promise<DiscoveredProject> {
     const name = projectPath.split('/').pop() || 'Unknown';
-    
+
     // Check if any active Claude session is in this project directory
-    const hasActiveSession = activeSessions.some(session => session.includes(projectPath));
-    
+    const hasActiveSession = activeSessions.some((session) => session.includes(projectPath));
+
     // Get last activity by checking file modification times
     let lastActivity: Date | undefined;
     try {
       const specsPath = join(claudePath, 'specs');
       const specDirs = await fs.readdir(specsPath);
-      
+
       let mostRecent = 0;
       for (const specDir of specDirs) {
         if (specDir.startsWith('.')) continue;
@@ -114,17 +123,17 @@ export class ProjectDiscovery {
           mostRecent = stat.mtime.getTime();
         }
       }
-      
+
       if (mostRecent > 0) {
         lastActivity = new Date(mostRecent);
       }
-      
+
       return {
         path: projectPath,
         name,
         hasActiveSession,
         lastActivity,
-        specCount: specDirs.filter(d => !d.startsWith('.')).length
+        specCount: specDirs.filter((d) => !d.startsWith('.')).length,
       };
     } catch {
       return {
@@ -132,7 +141,7 @@ export class ProjectDiscovery {
         name,
         hasActiveSession,
         lastActivity: undefined,
-        specCount: 0
+        specCount: 0,
       };
     }
   }
@@ -140,15 +149,20 @@ export class ProjectDiscovery {
   private async getActiveClaudeSessions(): Promise<string[]> {
     try {
       // Get Claude processes with their working directories
-      const { stdout } = await execAsync('ps aux | grep "claude" | grep -v grep | grep -v claude-code-spec');
-      const lines = stdout.trim().split('\n').filter(line => line.length > 0);
-      
+      const { stdout } = await execAsync(
+        'ps aux | grep "claude" | grep -v grep | grep -v claude-code-spec'
+      );
+      const lines = stdout
+        .trim()
+        .split('\n')
+        .filter((line) => line.length > 0);
+
       // Try to get working directories for each Claude process
       const sessions: string[] = [];
       for (const line of lines) {
         const parts = line.split(/\s+/);
         const pid = parts[1];
-        
+
         try {
           // On macOS, we can try to get the current working directory
           const { stdout: cwd } = await execAsync(`lsof -p ${pid} | grep cwd | awk '{print $NF}'`);
@@ -159,7 +173,7 @@ export class ProjectDiscovery {
           // Can't get CWD, that's okay
         }
       }
-      
+
       return sessions;
     } catch {
       return [];

@@ -13,7 +13,7 @@ PetiteVue.createApp({
 
   // Computed
   get activeSessionCount() {
-    return this.projects.filter(p => p.hasActiveSession).length;
+    return this.projects.filter((p) => p.hasActiveSession).length;
   },
 
   // Methods
@@ -56,8 +56,10 @@ PetiteVue.createApp({
         this.projects = Array.isArray(message.data) ? this.normalizeProjects(message.data) : [];
         this.activeTasks = Array.isArray(message.activeTasks) ? message.activeTasks : [];
         this.username = message.username || 'User';
-        
-        console.log(`Received initial data: ${this.projects.length} projects, ${this.activeTasks.length} active tasks`);
+
+        console.log(
+          `Received initial data: ${this.projects.length} projects, ${this.activeTasks.length} active tasks`
+        );
         // Sort projects: active first, then by activity
         this.sortProjects();
         // Select first project (which will be the most relevant after sorting)
@@ -80,7 +82,7 @@ PetiteVue.createApp({
 
       case 'remove-project':
         // Remove project
-        this.projects = this.projects.filter(p => p.path !== message.data.path);
+        this.projects = this.projects.filter((p) => p.path !== message.data.path);
         // If we were viewing the removed project, clear selection
         if (this.selectedProject?.path === message.data.path) {
           this.selectedProject = this.projects.length > 0 ? this.projects[0] : null;
@@ -90,36 +92,36 @@ PetiteVue.createApp({
       case 'project-update':
         const event = message.data;
         const projectPath = message.projectPath;
-        
+
         // Find the project
-        const projectIndex = this.projects.findIndex(p => p.path === projectPath);
+        const projectIndex = this.projects.findIndex((p) => p.path === projectPath);
         if (projectIndex === -1) return;
-        
+
         const project = this.projects[projectIndex];
-        
+
         // Update specs within the project
         if (event.type === 'removed') {
-          project.specs = project.specs.filter(s => s.name !== event.spec);
+          project.specs = project.specs.filter((s) => s.name !== event.spec);
         } else {
           // Update or add the spec
-          const specIndex = project.specs.findIndex(s => s.name === event.spec);
+          const specIndex = project.specs.findIndex((s) => s.name === event.spec);
           if (specIndex >= 0 && event.data) {
             project.specs[specIndex] = event.data;
           } else if (event.data) {
             project.specs.push(event.data);
           }
         }
-        
+
         // Sort specs by last modified
         project.specs.sort((a, b) => {
           const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
           const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
           return dateB - dateA;
         });
-        
+
         // Update last activity
         project.lastActivity = new Date();
-        
+
         // Re-sort projects: active first, then by last activity
         this.sortProjects();
         break;
@@ -214,9 +216,10 @@ PetiteVue.createApp({
 
   applyTheme() {
     const root = document.documentElement;
-    const isDarkMode = this.theme === 'dark' || 
+    const isDarkMode =
+      this.theme === 'dark' ||
       (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
+
     if (isDarkMode) {
       root.classList.add('dark');
     } else {
@@ -229,7 +232,7 @@ PetiteVue.createApp({
       // First, sort by active status
       if (a.hasActiveSession && !b.hasActiveSession) return -1;
       if (!a.hasActiveSession && b.hasActiveSession) return 1;
-      
+
       // Then by last activity within each group
       const dateA = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
       const dateB = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
@@ -252,13 +255,13 @@ PetiteVue.createApp({
   },
 
   selectProjectFromTask(projectPath, specName) {
-    const project = this.projects.find(p => p.path === projectPath);
+    const project = this.projects.find((p) => p.path === projectPath);
     if (project) {
       this.activeTab = 'projects';
       this.selectedProject = project;
       // If a spec name is provided, select that specific spec
       if (specName) {
-        const spec = project.specs.find(s => s.name === specName);
+        const spec = project.specs.find((s) => s.name === specName);
         if (spec) {
           this.selectedSpec = spec;
         }
@@ -275,52 +278,52 @@ PetiteVue.createApp({
 
   getSpecTaskCount(activeTask) {
     // Find the project and spec to get total task count
-    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    const project = this.projects.find((p) => p.path === activeTask.projectPath);
     if (!project) return 0;
-    
-    const spec = project.specs.find(s => s.name === activeTask.specName);
+
+    const spec = project.specs.find((s) => s.name === activeTask.specName);
     return spec?.tasks?.total || 0;
   },
 
   getSpecProgress(activeTask) {
     // Find the project and spec to calculate progress
-    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    const project = this.projects.find((p) => p.path === activeTask.projectPath);
     if (!project) return 0;
-    
-    const spec = project.specs.find(s => s.name === activeTask.specName);
+
+    const spec = project.specs.find((s) => s.name === activeTask.specName);
     if (!spec?.tasks) return 0;
-    
+
     const completed = spec.tasks.completed || 0;
     const total = spec.tasks.total || 0;
-    
+
     return total > 0 ? (completed / total) * 100 : 0;
   },
 
   getNextTask(activeTask) {
     // Find the project and spec to get next task
-    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    const project = this.projects.find((p) => p.path === activeTask.projectPath);
     if (!project) return null;
-    
-    const spec = project.specs.find(s => s.name === activeTask.specName);
+
+    const spec = project.specs.find((s) => s.name === activeTask.specName);
     if (!spec?.tasks?.taskList) return null;
-    
+
     const tasks = spec.tasks.taskList;
     const currentTaskId = activeTask.task.id;
-    
+
     // Find the index of the current task
-    const currentIndex = tasks.findIndex(task => task.id === currentTaskId);
+    const currentIndex = tasks.findIndex((task) => task.id === currentTaskId);
     if (currentIndex === -1 || currentIndex >= tasks.length - 1) return null;
-    
+
     // Return the next task in the list
     return tasks[currentIndex + 1];
   },
 
   getSpecData(activeTask) {
     // Find the project and spec data for an active task
-    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    const project = this.projects.find((p) => p.path === activeTask.projectPath);
     if (!project) return null;
-    
-    const spec = project.specs.find(s => s.name === activeTask.specName);
+
+    const spec = project.specs.find((s) => s.name === activeTask.specName);
     return spec || null;
   },
 
@@ -354,17 +357,19 @@ PetiteVue.createApp({
 
   // Normalize project data to handle potential JSON serialization issues
   normalizeProjects(projects) {
-    return projects.map(project => {
+    return projects.map((project) => {
       if (project.specs) {
-        project.specs = project.specs.map(spec => {
+        project.specs = project.specs.map((spec) => {
           // Ensure requirements content is properly handled
           if (spec.requirements && spec.requirements.content) {
             // If it's already an array of proper objects, keep it as is
-            if (Array.isArray(spec.requirements.content) && 
-                spec.requirements.content.length > 0 && 
-                typeof spec.requirements.content[0] === 'object' &&
-                spec.requirements.content[0].id && 
-                spec.requirements.content[0].title) {
+            if (
+              Array.isArray(spec.requirements.content) &&
+              spec.requirements.content.length > 0 &&
+              typeof spec.requirements.content[0] === 'object' &&
+              spec.requirements.content[0].id &&
+              spec.requirements.content[0].title
+            ) {
               // Data is already in correct format
             }
             // If it's a string, try to parse it
@@ -391,7 +396,7 @@ PetiteVue.createApp({
               });
             }
           }
-          
+
           // Ensure design content is properly parsed
           if (spec.design && spec.design.codeReuseContent) {
             if (typeof spec.design.codeReuseContent === 'string') {
@@ -402,7 +407,7 @@ PetiteVue.createApp({
               }
             }
           }
-          
+
           return spec;
         });
       }
