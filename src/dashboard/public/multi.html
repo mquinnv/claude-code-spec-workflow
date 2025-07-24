@@ -316,7 +316,7 @@
                           </p>
                           <button 
                             v-if="spec.requirements.content && spec.requirements.content.length > 0"
-                            @click="toggleRequirementsExpanded(spec.name)"
+                            @click.stop="toggleRequirementsExpanded(spec.name)"
                             class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center"
                           >
                             <i class="fas mr-1" :class="isRequirementsExpanded(spec.name) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
