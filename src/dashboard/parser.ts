@@ -51,13 +51,31 @@ export class SpecParser {
 
   async getAllSpecs(): Promise<Spec[]> {
     try {
+      // Check if specs directory exists first
+      try {
+        await access(this.specsPath, constants.F_OK);
+      } catch {
+        // Specs directory doesn't exist, return empty array
+        return [];
+      }
+      
+      console.log('Reading specs from:', this.specsPath);
       const dirs = await readdir(this.specsPath);
+      console.log('Found directories:', dirs);
       const specs = await Promise.all(
         dirs.filter((dir) => !dir.startsWith('.')).map((dir) => this.getSpec(dir))
       );
-      return specs.filter((spec) => spec !== null) as Spec[];
+      const validSpecs = specs.filter((spec) => spec !== null) as Spec[];
+      console.log('Parsed specs:', validSpecs.length);
+      // Sort by last modified date, newest first
+      validSpecs.sort((a, b) => {
+        const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+        const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+        return dateB - dateA;
+      });
+      return validSpecs;
     } catch (error) {
-      console.error('Error reading specs:', error);
+      console.error('Error reading specs from', this.specsPath, ':', error);
       return [];
     }
   }
@@ -83,11 +101,15 @@ export class SpecParser {
       const content = await readFile(requirementsPath, 'utf-8');
       spec.requirements = {
         exists: true,
-        userStories: (content.match(/## User Story \d+/g) || []).length,
-        approved: content.includes('✅ APPROVED'),
+        userStories: (content.match(/(\*\*User Story:\*\*|## User Story \d+)/g) || []).length,
+        approved: content.includes('✅ APPROVED') || content.includes('**Approved:** ✓'),
       };
+      // Set initial status
+      spec.status = 'requirements';
+      
+      // If requirements are approved, we move to design phase
       if (spec.requirements.approved) {
-        spec.status = 'requirements';
+        spec.status = 'design';
       }
     }
 
@@ -100,18 +122,25 @@ export class SpecParser {
         approved: content.includes('✅ APPROVED'),
         hasCodeReuseAnalysis: content.includes('## Code Reuse Analysis'),
       };
+      // If design is approved, we move to tasks phase
       if (spec.design.approved) {
-        spec.status = 'design';
+        spec.status = 'tasks';
       }
     }
 
     // Check tasks
     const tasksPath = join(specPath, 'tasks.md');
     if (await this.fileExists(tasksPath)) {
+      console.log(`Reading tasks from: ${tasksPath}`);
       const content = await readFile(tasksPath, 'utf-8');
+      console.log('Tasks file content length:', content.length);
+      console.log('Tasks file includes APPROVED:', content.includes('✅ APPROVED'));
+      
       const taskList = this.parseTasks(content);
       const completed = this.countCompletedTasks(taskList);
       const total = this.countTotalTasks(taskList);
+      
+      console.log('Parsed task counts - Total:', total, 'Completed:', completed);
 
       spec.tasks = {
         exists: true,
@@ -152,9 +181,20 @@ export class SpecParser {
   }
 
   private parseTasks(content: string): Task[] {
+    console.log('Parsing tasks from content...');
     const tasks: Task[] = [];
     const lines = content.split('\n');
-    const taskRegex = /^(\s*)- \[([ x])\] (\*\*)?Task (\d+(?:\.\d+)*):?\*?\*? (.+)$/;
+    console.log('Total lines:', lines.length);
+    
+    // Let's test what the actual lines look like
+    lines.slice(0, 20).forEach((line, i) => {
+      if (line.includes('[') && line.includes(']')) {
+        console.log(`Line ${i}: "${line}"`);
+      }
+    });
+    
+    // Match the actual format: "- [x] 1. Create GraphQL queries..."
+    const taskRegex = /^(\s*)- \[([ x])\] (\d+(?:\.\d+)*)\. (.+)$/;
     const requirementsRegex = /_Requirements: ([\d., ]+)/;
     const leverageRegex = /_Leverage: (.+)$/;
 
@@ -164,7 +204,7 @@ export class SpecParser {
     for (const line of lines) {
       const match = line.match(taskRegex);
       if (match) {
-        const [, indent, checked, , id, description] = match;
+        const [, indent, checked, id, description] = match;
         const level = indent.length / 2;
 
         currentTask = {

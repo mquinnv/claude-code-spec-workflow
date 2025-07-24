@@ -1,0 +1,260 @@
+// Multi-project dashboard app
+PetiteVue.createApp({
+  // State
+  projects: [],
+  selectedProject: null,
+  selectedSpec: null,
+  activeTasks: [],
+  activeTab: 'projects', // 'active' or 'projects'
+  connected: false,
+  ws: null,
+  theme: 'system',
+  username: 'User',
+
+  // Computed
+  get activeSessionCount() {
+    return this.projects.filter(p => p.hasActiveSession).length;
+  },
+
+  // Methods
+  async init() {
+    console.log('Multi-project dashboard initializing...');
+    this.initTheme();
+    this.connectWebSocket();
+  },
+
+  connectWebSocket() {
+    const wsUrl = `ws://${window.location.host}/ws`;
+    this.ws = new WebSocket(wsUrl);
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected');
+      this.connected = true;
+    };
+
+    this.ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      this.handleWebSocketMessage(message);
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      this.connected = false;
+      // Reconnect after 3 seconds
+      setTimeout(() => this.connectWebSocket(), 3000);
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  },
+
+  handleWebSocketMessage(message) {
+    switch (message.type) {
+      case 'initial':
+        this.projects = message.data;
+        this.activeTasks = message.activeTasks || [];
+        this.username = message.username || 'User';
+        // Sort projects: active first, then by activity
+        this.sortProjects();
+        // Select first project (which will be the most relevant after sorting)
+        if (!this.selectedProject && this.projects.length > 0 && this.activeTab === 'projects') {
+          this.selectedProject = this.projects[0];
+        }
+        break;
+
+      case 'active-tasks-update':
+        this.activeTasks = message.activeTasks || [];
+        break;
+
+      case 'new-project':
+        // Add new project
+        this.projects.push(message.data);
+        // Re-sort projects: active first, then by last activity
+        this.sortProjects();
+        console.log(`New project appeared: ${message.data.name}`);
+        break;
+
+      case 'remove-project':
+        // Remove project
+        this.projects = this.projects.filter(p => p.path !== message.data.path);
+        // If we were viewing the removed project, clear selection
+        if (this.selectedProject?.path === message.data.path) {
+          this.selectedProject = this.projects.length > 0 ? this.projects[0] : null;
+        }
+        break;
+
+      case 'project-update':
+        const event = message.data;
+        const projectPath = message.projectPath;
+        
+        // Find the project
+        const projectIndex = this.projects.findIndex(p => p.path === projectPath);
+        if (projectIndex === -1) return;
+        
+        const project = this.projects[projectIndex];
+        
+        // Update specs within the project
+        if (event.type === 'removed') {
+          project.specs = project.specs.filter(s => s.name !== event.spec);
+        } else if (event.type === 'hook') {
+          // Handle hook events
+          const specIndex = project.specs.findIndex(s => s.name === event.spec);
+          if (specIndex >= 0 && event.data) {
+            project.specs[specIndex] = event.data;
+            console.log(`Task ${event.hook.taskId} ${event.hook.action} in ${event.spec}`);
+          }
+        } else {
+          // Update or add the spec
+          const specIndex = project.specs.findIndex(s => s.name === event.spec);
+          if (specIndex >= 0 && event.data) {
+            project.specs[specIndex] = event.data;
+          } else if (event.data) {
+            project.specs.push(event.data);
+          }
+        }
+        
+        // Sort specs by last modified
+        project.specs.sort((a, b) => {
+          const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+          const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+          return dateB - dateA;
+        });
+        
+        // Update last activity
+        project.lastActivity = new Date();
+        
+        // Re-sort projects: active first, then by last activity
+        this.sortProjects();
+        break;
+    }
+  },
+
+  getStatusClass(status) {
+    const classes = {
+      'not-started': 'bg-gray-100 text-gray-800',
+      requirements: 'bg-blue-100 text-blue-800',
+      design: 'bg-purple-100 text-purple-800',
+      tasks: 'bg-yellow-100 text-yellow-800',
+      'in-progress': 'bg-indigo-100 text-indigo-800',
+      completed: 'bg-green-100 text-green-800',
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+  },
+
+  getStatusLabel(status) {
+    const labels = {
+      'not-started': 'Not Started',
+      requirements: 'Requirements',
+      design: 'Design',
+      tasks: 'Tasks',
+      'in-progress': 'In Progress',
+      completed: 'Completed',
+    };
+    return labels[status] || status;
+  },
+
+  formatDate(date) {
+    if (!date) return 'Never';
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    }
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+    return d.toLocaleDateString();
+  },
+
+  // Stats helpers
+  getSpecsInProgress(project) {
+    if (!project || !project.specs) return 0;
+    return project.specs.filter((s) => s.status === 'in-progress').length;
+  },
+
+  getSpecsCompleted(project) {
+    if (!project || !project.specs) return 0;
+    return project.specs.filter((s) => s.status === 'completed').length;
+  },
+
+  getTotalTasks(project) {
+    if (!project || !project.specs) return 0;
+    return project.specs.reduce((total, spec) => {
+      return total + (spec.tasks?.total || 0);
+    }, 0);
+  },
+
+  // Theme management (same as single project)
+  initTheme() {
+    const savedTheme = localStorage.getItem('theme-preference') || 'system';
+    this.theme = savedTheme;
+    this.applyTheme();
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (this.theme === 'system') {
+        this.applyTheme();
+      }
+    });
+  },
+
+  cycleTheme() {
+    const themes = ['light', 'dark', 'system'];
+    const currentIndex = themes.indexOf(this.theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    this.theme = themes[nextIndex];
+    localStorage.setItem('theme-preference', this.theme);
+    this.applyTheme();
+  },
+
+  applyTheme() {
+    const root = document.documentElement;
+    const isDarkMode = this.theme === 'dark' || 
+      (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  },
+
+  sortProjects() {
+    this.projects.sort((a, b) => {
+      // First, sort by active status
+      if (a.hasActiveSession && !b.hasActiveSession) return -1;
+      if (!a.hasActiveSession && b.hasActiveSession) return 1;
+      
+      // Then by last activity within each group
+      const dateA = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+      const dateB = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+      return dateB - dateA;
+    });
+  },
+
+  switchTab(tab) {
+    this.activeTab = tab;
+    if (tab === 'active') {
+      this.selectedProject = null;
+    } else if (tab === 'projects' && this.projects.length > 0 && !this.selectedProject) {
+      this.selectedProject = this.projects[0];
+    }
+  },
+
+  selectProjectFromTask(projectPath) {
+    const project = this.projects.find(p => p.path === projectPath);
+    if (project) {
+      this.activeTab = 'projects';
+      this.selectedProject = project;
+    }
+  },
+}).mount('#app');

@@ -42,18 +42,22 @@ export class DashboardServer {
     this.app.register(async function (fastify) {
       fastify.get('/ws', { websocket: true }, (connection: any) => {
         const socket = connection.socket;
+        console.log('WebSocket client connected');
 
         // Add client to set
         self.clients.add(socket);
 
         // Send initial state
-        const specs = self.parser.getAllSpecs();
-        socket.send(
-          JSON.stringify({
-            type: 'initial',
-            data: specs,
-          })
-        );
+        self.parser.getAllSpecs().then(specs => {
+          socket.send(
+            JSON.stringify({
+              type: 'initial',
+              data: specs,
+            })
+          );
+        }).catch(error => {
+          console.error('Error getting initial specs:', error);
+        });
 
         // Handle client disconnect
         socket.on('close', () => {
@@ -71,6 +75,11 @@ export class DashboardServer {
     this.app.get('/api/specs', async () => {
       const specs = await this.parser.getAllSpecs();
       return specs;
+    });
+
+    this.app.get('/api/info', async () => {
+      const projectName = this.options.projectPath.split('/').pop() || 'Project';
+      return { projectName };
     });
 
     this.app.get('/api/specs/:name', async (request, reply) => {
@@ -111,7 +120,18 @@ export class DashboardServer {
   }
 
   async stop() {
+    // Close all WebSocket connections
+    this.clients.forEach((client) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.close();
+      }
+    });
+    this.clients.clear();
+
+    // Stop the watcher
     await this.watcher.stop();
+    
+    // Close the Fastify server
     await this.app.close();
   }
 }

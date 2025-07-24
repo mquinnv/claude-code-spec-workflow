@@ -17,12 +17,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supports Claude hooks for active task detection
   - No heavy frameworks - optimized for speed and simplicity
 
+- **Multi-Project Dashboard**: Monitor all Claude projects across your system
+  - `claude-spec-dashboard --multi` launches multi-project view
+  - Automatic project discovery in common directories
+  - Detects active Claude sessions
+  - Project tabs for easy navigation
+  - Shows projects with specs or active sessions
+  - Periodic rescan (30s) for new projects
+  - WebSocket updates across all projects
+
+- **Active Sessions Tab**: Shows currently active tasks from projects with active Claude sessions
+  - First tab in multi-project dashboard
+  - Only shows tasks marked as "In Progress" from projects where Claude is running
+  - Each spec can have one task marked as currently in progress
+  - Displays task header info: ID, description, project, spec
+  - Shows requirements and leverage references
+  - Click project name to jump to that project's view
+  - Helps focus on what's being actively worked on right now
+
 ### Enhanced
 - **Package Structure**: Added new dashboard module
   - `src/dashboard/` contains all dashboard-related code
   - Separate CLI entry point for dashboard command
   - File watcher using chokidar for real-time monitoring
   - Spec parser extracts detailed status and progress information
+  - Multi-project support with project discovery
+  - Active task aggregation across projects
 
 ## [1.2.3] - 2025-07-22
 

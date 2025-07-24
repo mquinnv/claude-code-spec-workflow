@@ -114,8 +114,11 @@ After setup, use these commands in Claude Code:
 Monitor your specs and tasks with a beautiful web dashboard:
 
 ```bash
-# Start the dashboard
+# Start single project dashboard
 npx claude-spec-dashboard
+
+# Start multi-project dashboard
+npx claude-spec-dashboard --multi
 
 # Start on custom port
 npx claude-spec-dashboard --port 8080
@@ -132,9 +135,13 @@ npx claude-spec-dashboard --dir /path/to/project
 - **Progress tracking** - Visual progress bars for each spec
 - **Task breakdown** - Expandable task lists with status
 - **Code reuse visibility** - See leverage references at a glance
+- **Multi-project support** - Monitor all your Claude projects at once
+- **Active Sessions tab** - See in-progress tasks from projects with active Claude sessions
+- **Claude hooks integration** - Highlights currently active tasks
 - **Modern UI** - Built with Tailwind CSS and petite-vue
 - **Lightweight** - No heavy frameworks, just fast tools
 - **WebSocket powered** - Instant updates when files change
+- **Dark mode** - Built-in theme toggle with system preference support
 
 ### 🆕 Auto-Generated Task Commands
 

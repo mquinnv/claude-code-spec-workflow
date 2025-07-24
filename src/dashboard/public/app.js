@@ -1,11 +1,12 @@
-const { createApp } = PetiteVue;
-
-createApp({
+// Initialize petite-vue app
+PetiteVue.createApp({
   // State
   specs: [],
   selectedSpec: null,
   connected: false,
   ws: null,
+  projectName: 'Project',
+  theme: 'system', // 'light', 'dark', or 'system'
 
   // Computed
   get specsInProgress() {
@@ -24,14 +25,30 @@ createApp({
 
   // Methods
   async init() {
+    console.log('Dashboard initializing...');
+    this.initTheme();
+    await this.fetchProjectInfo();
     await this.fetchSpecs();
     this.connectWebSocket();
   },
 
+  async fetchProjectInfo() {
+    try {
+      const response = await fetch('/api/info');
+      const info = await response.json();
+      this.projectName = info.projectName;
+      document.title = `${info.projectName} - Spec Dashboard`;
+    } catch (error) {
+      console.error('Error fetching project info:', error);
+    }
+  },
+
   async fetchSpecs() {
     try {
+      console.log('Fetching specs from API...');
       const response = await fetch('/api/specs');
       this.specs = await response.json();
+      console.log('Fetched specs:', this.specs);
     } catch (error) {
       console.error('Error fetching specs:', error);
     }
@@ -75,6 +92,23 @@ createApp({
         const event = message.data;
         if (event.type === 'removed') {
           this.specs = this.specs.filter((s) => s.name !== event.spec);
+        } else if (event.type === 'hook') {
+          // Handle hook events (task started/completed)
+          const index = this.specs.findIndex((s) => s.name === event.spec);
+          if (index >= 0 && event.data) {
+            // Update the spec with new data
+            this.specs[index] = event.data;
+            
+            // Show a notification or highlight the change
+            if (event.hook) {
+              console.log(`Task ${event.hook.taskId} ${event.hook.action} in ${event.spec}`);
+              
+              // If this is the selected spec, we might want to flash or highlight the task
+              if (this.selectedSpec?.name === event.spec) {
+                this.selectedSpec = event.data;
+              }
+            }
+          }
         } else {
           // Update or add the spec
           const index = this.specs.findIndex((s) => s.name === event.spec);
@@ -149,5 +183,41 @@ createApp({
 
     // Default to date string
     return d.toLocaleDateString();
+  },
+
+  // Theme management
+  initTheme() {
+    // Get saved theme or default to system
+    const savedTheme = localStorage.getItem('theme-preference') || 'system';
+    this.theme = savedTheme;
+    this.applyTheme();
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (this.theme === 'system') {
+        this.applyTheme();
+      }
+    });
+  },
+
+  cycleTheme() {
+    const themes = ['light', 'dark', 'system'];
+    const currentIndex = themes.indexOf(this.theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    this.theme = themes[nextIndex];
+    localStorage.setItem('theme-preference', this.theme);
+    this.applyTheme();
+  },
+
+  applyTheme() {
+    const root = document.documentElement;
+    const isDarkMode = this.theme === 'dark' || 
+      (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
   },
 }).mount('#app');
