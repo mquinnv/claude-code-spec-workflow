@@ -400,13 +400,12 @@
                             class="text-xs text-gray-600 dark:text-gray-400 pl-2 border-l-2 border-gray-200 dark:border-gray-600"
                           >
                             <span v-if="requirement && requirement.id">
-                              <strong>{{ requirement.id }}:</strong> {{ requirement.title || 'No
-                              title' }}
+                              <strong>{{ requirement.id }}:</strong> {{ requirement.title || '[No title - Debug: ' + JSON.stringify(Object.keys(requirement)) + ']' }}
                             </span>
                             <span v-else-if="typeof requirement === 'string'">
                               {{ requirement }}
                             </span>
-                            <span v-else> {{ JSON.stringify(requirement) }} </span>
+                            <span v-else> DEBUG: {{ JSON.stringify(requirement) }} </span>
                           </div>
                         </div>
 

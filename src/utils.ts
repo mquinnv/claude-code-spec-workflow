@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { createServer } from 'net';
 
 const execAsync = promisify(exec);
 
@@ -74,4 +75,48 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
       throw error;
     }
   }
+}
+
+/**
+ * Check if a port is available
+ */
+export async function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = createServer();
+    
+    server.listen(port, () => {
+      server.close(() => resolve(true));
+    });
+    
+    server.on('error', () => {
+      resolve(false);
+    });
+  });
+}
+
+/**
+ * Find an available port starting from a given port number
+ */
+export async function findAvailablePort(startPort: number = 3000, maxAttempts: number = 100): Promise<number> {
+  for (let port = startPort; port < startPort + maxAttempts; port++) {
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+  }
+  throw new Error(`Could not find an available port after checking ${maxAttempts} ports starting from ${startPort}`);
+}
+
+/**
+ * Get the best available port from a list of preferred ports, with fallback
+ */
+export async function getBestAvailablePort(preferredPorts: number[] = [3000, 3001, 3002, 8080, 8000, 4000]): Promise<number> {
+  // First try the preferred ports
+  for (const port of preferredPorts) {
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+  }
+  
+  // Fall back to finding any available port starting from 3000
+  return findAvailablePort(3000);
 }

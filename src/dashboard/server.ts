@@ -6,6 +6,7 @@ import { SpecWatcher } from './watcher';
 import { SpecParser } from './parser';
 import open from 'open';
 import { WebSocket } from 'ws';
+import { isPortAvailable, findAvailablePort } from '../utils';
 
 interface WebSocketConnection {
   socket: WebSocket;
@@ -117,8 +118,19 @@ export class DashboardServer {
     // Start watcher
     await this.watcher.start();
 
+    // Find available port if the requested port is busy
+    let actualPort = this.options.port;
+    if (!(await isPortAvailable(this.options.port))) {
+      console.log(`Port ${this.options.port} is in use, finding alternative...`);
+      actualPort = await findAvailablePort(this.options.port);
+      console.log(`Using port ${actualPort} instead`);
+    }
+
     // Start server
-    await this.app.listen({ port: this.options.port, host: '0.0.0.0' });
+    await this.app.listen({ port: actualPort, host: '0.0.0.0' });
+    
+    // Update the port in options for URL generation
+    this.options.port = actualPort;
 
     // Open browser if requested
     if (this.options.autoOpen) {

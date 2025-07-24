@@ -8,6 +8,7 @@ import { ProjectDiscovery, DiscoveredProject } from './project-discovery';
 import open from 'open';
 import { WebSocket } from 'ws';
 import { userInfo } from 'os';
+import { isPortAvailable, findAvailablePort } from '../utils';
 
 interface ProjectState {
   project: DiscoveredProject;
@@ -124,8 +125,19 @@ export class MultiProjectDashboardServer {
       return specs;
     });
 
+    // Find available port if the requested port is busy
+    let actualPort = this.options.port;
+    if (!(await isPortAvailable(this.options.port))) {
+      console.log(`Port ${this.options.port} is in use, finding alternative...`);
+      actualPort = await findAvailablePort(this.options.port);
+      console.log(`Using port ${actualPort} instead`);
+    }
+
     // Start server
-    await this.app.listen({ port: this.options.port, host: '0.0.0.0' });
+    await this.app.listen({ port: actualPort, host: '0.0.0.0' });
+    
+    // Update the port in options for URL generation
+    this.options.port = actualPort;
 
     // Start periodic rescan for new active projects
     this.startPeriodicRescan();
