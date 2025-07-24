@@ -18,6 +18,11 @@ export interface RequirementDetail {
   acceptanceCriteria: string[];
 }
 
+export interface CodeReuseCategory {
+  title: string;
+  items: string[];
+}
+
 export interface Spec {
   name: string;
   displayName: string;
@@ -32,7 +37,7 @@ export interface Spec {
     exists: boolean;
     approved: boolean;
     hasCodeReuseAnalysis: boolean;
-    codeReuseContent?: string[];
+    codeReuseContent?: CodeReuseCategory[];
   };
   tasks?: {
     exists: boolean;
@@ -390,11 +395,11 @@ export class SpecParser {
     return stories; // Return all stories
   }
 
-  private extractCodeReuseAnalysis(content: string): string[] {
-    const analysis: string[] = [];
+  private extractCodeReuseAnalysis(content: string): CodeReuseCategory[] {
+    const categories: CodeReuseCategory[] = [];
     const lines = content.split('\n');
     let inCodeReuseSection = false;
-    let currentItem = '';
+    let currentCategory: CodeReuseCategory | null = null;
 
     for (const line of lines) {
       if (line.includes('## Code Reuse Analysis')) {
@@ -408,26 +413,40 @@ export class SpecParser {
           break;
         }
 
-        // Collect bullet points and key information
-        if (line.startsWith('- ') || line.startsWith('* ')) {
-          if (currentItem) {
-            analysis.push(currentItem.trim());
+        // Look for numbered categories like "1. **Configuration Infrastructure**"
+        const categoryMatch = line.match(/^\d+\.\s*\*\*(.+?)\*\*/);
+        if (categoryMatch) {
+          // Save previous category
+          if (currentCategory) {
+            categories.push(currentCategory);
           }
-          currentItem = line.replace(/^[-*]\s*/, '');
-        } else if (line.trim() && currentItem) {
-          currentItem += ' ' + line.trim();
-        } else if (line.trim() && !line.startsWith('#')) {
-          analysis.push(line.trim());
+          // Start new category
+          currentCategory = {
+            title: categoryMatch[1].trim(),
+            items: []
+          };
+        }
+        // Look for bullet points under categories
+        else if (currentCategory && (line.startsWith('   - ') || line.startsWith('  - '))) {
+          const item = line.replace(/^\s*-\s*/, '').trim();
+          if (item) {
+            // Clean up markdown formatting
+            const cleanItem = item
+              .replace(/`([^`]+)`/g, '$1') // Remove backticks
+              .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold formatting
+              .trim();
+            currentCategory.items.push(cleanItem);
+          }
         }
       }
     }
 
-    // Don't forget the last item
-    if (currentItem) {
-      analysis.push(currentItem.trim());
+    // Don't forget the last category
+    if (currentCategory) {
+      categories.push(currentCategory);
     }
 
-    return analysis; // Return all analysis items
+    return categories;
   }
 
   private async fileExists(path: string): Promise<boolean> {

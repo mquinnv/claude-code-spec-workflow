@@ -200,8 +200,8 @@
                       Code Reuse Analysis
                     </h6>
                     <div class="text-sm text-green-600 dark:text-green-400">
-                      <span v-for="(item, index) in getSpecData(activeTask).design.codeReuseContent" :key="item">
-                        • {{ item }}<span v-if="index < getSpecData(activeTask).design.codeReuseContent.length - 1"> | </span>
+                      <span v-for="(category, categoryIndex) in getSpecData(activeTask).design.codeReuseContent" :key="category.title">
+                        <strong>{{ category.title }}:</strong> {{ category.items.join(', ') }}<span v-if="categoryIndex < getSpecData(activeTask).design.codeReuseContent.length - 1"> | </span>
                       </span>
                     </div>
                   </div>
@@ -371,11 +371,21 @@
                             {{ spec.design.hasCodeReuseAnalysis ? 'Has' : 'Missing' }} code reuse analysis
                           </span>
                         </p>
-                        <div v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0" class="space-y-1">
-                          <div class="text-xs text-green-600 dark:text-green-400">
-                            <span v-for="(item, index) in spec.design.codeReuseContent" :key="item">
-                              • {{ item }}<span v-if="index < spec.design.codeReuseContent.length - 1"> | </span>
-                            </span>
+                        <div v-if="spec.design.codeReuseContent && spec.design.codeReuseContent.length > 0" class="space-y-2 mt-2">
+                          <div 
+                            v-for="category in spec.design.codeReuseContent" 
+                            :key="category.title"
+                            class="bg-green-50 dark:bg-green-900/20 rounded-lg p-2"
+                          >
+                            <h6 class="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
+                              {{ category.title }}
+                            </h6>
+                            <ul class="text-xs text-green-600 dark:text-green-400 space-y-0.5">
+                              <li v-for="item in category.items" :key="item" class="flex items-start">
+                                <span class="mr-1.5 mt-0.5 w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></span>
+                                <span>{{ item }}</span>
+                              </li>
+                            </ul>
                           </div>
                         </div>
                       </div>
