@@ -5,7 +5,7 @@ PetiteVue.createApp({
   selectedProject: null,
   selectedSpec: null,
   activeTasks: [],
-  activeTab: 'projects', // 'active' or 'projects'
+  activeTab: 'active', // 'active' or 'projects'
   connected: false,
   ws: null,
   theme: 'system',
