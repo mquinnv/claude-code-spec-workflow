@@ -19,11 +19,13 @@ export interface Spec {
     exists: boolean;
     userStories: number;
     approved: boolean;
+    content?: string[];
   };
   design?: {
     exists: boolean;
     approved: boolean;
     hasCodeReuseAnalysis: boolean;
+    codeReuseContent?: string[];
   };
   tasks?: {
     exists: boolean;
@@ -99,6 +101,7 @@ export class SpecParser {
         exists: true,
         userStories: (content.match(/(\*\*User Story:\*\*|## User Story \d+)/g) || []).length,
         approved: content.includes('✅ APPROVED') || content.includes('**Approved:** ✓'),
+        content: this.extractUserStories(content),
       };
       // Set initial status
       spec.status = 'requirements';
@@ -117,6 +120,7 @@ export class SpecParser {
         exists: true,
         approved: content.includes('✅ APPROVED'),
         hasCodeReuseAnalysis: content.includes('## Code Reuse Analysis'),
+        codeReuseContent: this.extractCodeReuseAnalysis(content),
       };
       // If design is approved, we move to tasks phase
       if (spec.design.approved) {
@@ -281,6 +285,87 @@ export class SpecParser {
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  }
+
+  private extractUserStories(content: string): string[] {
+    const stories: string[] = [];
+    const lines = content.split('\n');
+    let currentStory = '';
+    let inStory = false;
+
+    for (const line of lines) {
+      // Check if line starts a user story
+      if (line.includes('**User Story:**') || line.match(/^## User Story \d+/)) {
+        if (currentStory) {
+          stories.push(currentStory.trim());
+        }
+        currentStory = line.replace(/^\#*\s*/, '').replace('**User Story:**', '').trim();
+        inStory = true;
+      } else if (inStory && line.trim()) {
+        // Continue collecting story content until we hit another section or empty line
+        if (line.startsWith('#') || line.includes('**')) {
+          if (line.includes('**As a**') || line.includes('**I want**') || line.includes('**So that**')) {
+            currentStory += ' ' + line.replace(/\*\*/g, '').trim();
+          } else {
+            // Hit a new section, finish current story
+            if (currentStory) {
+              stories.push(currentStory.trim());
+              currentStory = '';
+              inStory = false;
+            }
+          }
+        } else if (line.trim()) {
+          currentStory += ' ' + line.trim();
+        }
+      }
+    }
+
+    // Don't forget the last story
+    if (currentStory) {
+      stories.push(currentStory.trim());
+    }
+
+    return stories.slice(0, 3); // Limit to first 3 stories for display
+  }
+
+  private extractCodeReuseAnalysis(content: string): string[] {
+    const analysis: string[] = [];
+    const lines = content.split('\n');
+    let inCodeReuseSection = false;
+    let currentItem = '';
+
+    for (const line of lines) {
+      if (line.includes('## Code Reuse Analysis')) {
+        inCodeReuseSection = true;
+        continue;
+      }
+
+      if (inCodeReuseSection) {
+        // Stop at next major section
+        if (line.startsWith('## ') && !line.includes('Code Reuse')) {
+          break;
+        }
+
+        // Collect bullet points and key information
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          if (currentItem) {
+            analysis.push(currentItem.trim());
+          }
+          currentItem = line.replace(/^[-*]\s*/, '');
+        } else if (line.trim() && currentItem) {
+          currentItem += ' ' + line.trim();
+        } else if (line.trim() && !line.startsWith('#')) {
+          analysis.push(line.trim());
+        }
+      }
+    }
+
+    // Don't forget the last item
+    if (currentItem) {
+      analysis.push(currentItem.trim());
+    }
+
+    return analysis.slice(0, 4); // Limit to first 4 items for display
   }
 
   private async fileExists(path: string): Promise<boolean> {

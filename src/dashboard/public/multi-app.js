@@ -312,4 +312,13 @@ PetiteVue.createApp({
     // Return the next task in the list
     return tasks[currentIndex + 1];
   },
+
+  getSpecData(activeTask) {
+    // Find the project and spec data for an active task
+    const project = this.projects.find(p => p.path === activeTask.projectPath);
+    if (!project) return null;
+    
+    const spec = project.specs.find(s => s.name === activeTask.specName);
+    return spec || null;
+  },
 }).mount('#app');

@@ -164,15 +164,45 @@
                     </span>
                   </div>
                   
-                  <!-- Task Details -->
-                  <div class="space-y-1">
-                    <div v-if="activeTask.task.requirements && activeTask.task.requirements.length > 0" class="text-sm text-gray-600 dark:text-gray-400">
+                  <!-- Task Details - Flattened on one line -->
+                  <div class="flex flex-wrap gap-4 text-sm">
+                    <span v-if="activeTask.task.requirements && activeTask.task.requirements.length > 0" class="text-gray-600 dark:text-gray-400">
                       <i class="fas fa-clipboard-check mr-1"></i>
-                      Requirements: {{ activeTask.task.requirements.join(', ') }}
-                    </div>
-                    <div v-if="activeTask.task.leverage" class="text-sm text-blue-600 dark:text-blue-400">
+                      Req: {{ activeTask.task.requirements.join(', ') }}
+                    </span>
+                    <span v-if="activeTask.task.leverage" class="text-blue-600 dark:text-blue-400">
                       <i class="fas fa-code-branch mr-1"></i>
                       Leverage: {{ activeTask.task.leverage }}
+                    </span>
+                  </div>
+
+                  <!-- Spec Requirements -->
+                  <div v-if="getSpecData(activeTask)?.requirements?.content?.length > 0" class="mt-4">
+                    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <i class="fas fa-file-alt mr-1"></i>
+                      User Stories
+                    </h6>
+                    <div class="space-y-1">
+                      <div 
+                        v-for="story in getSpecData(activeTask).requirements.content" 
+                        :key="story"
+                        class="text-sm text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-gray-200 dark:border-gray-600"
+                      >
+                        {{ story }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Code Reuse Analysis -->
+                  <div v-if="getSpecData(activeTask)?.design?.codeReuseContent?.length > 0" class="mt-4">
+                    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <i class="fas fa-recycle mr-1"></i>
+                      Code Reuse Analysis
+                    </h6>
+                    <div class="text-sm text-green-600 dark:text-green-400">
+                      <span v-for="(item, index) in getSpecData(activeTask).design.codeReuseContent" :key="item">
+                        • {{ item }}<span v-if="index < getSpecData(activeTask).design.codeReuseContent.length - 1"> | </span>
+                      </span>
                     </div>
                   </div>
                 </div>
