@@ -1,6 +1,6 @@
 # Claude Code Spec Workflow
 
-[![npm version](https://badge.fury.io/js/@pimzino%2Fclaude-code-spec-workflow.svg)](https://badge.fury.io/js/@pimzino%2Fclaude-code-spec-workflow)
+[![npm version](https://badge.fury.io/js/@pimzino%2Fclaude-code-spec-workflow.svg?cacheSeconds=3600)](https://badge.fury.io/js/@pimzino%2Fclaude-code-spec-workflow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > Automated spec-driven workflow for Claude Code. Transform feature ideas into complete implementations through **Requirements → Design → Tasks → Implementation**.
@@ -54,6 +54,7 @@ The setup automatically creates:
 - **⚙️ Configuration files** for workflow automation
 - **🔧 Command generation scripts** for dynamic task commands
 - **📖 CLAUDE.md** with comprehensive workflow instructions
+- **📊 Real-time dashboard** for monitoring specs and tasks (NEW!)
 
 ## 🔄 Workflow Overview
 
@@ -107,6 +108,39 @@ After setup, use these commands in Claude Code:
 # List all specs
 /spec-list
 ```
+
+### 📊 Real-Time Dashboard (NEW!)
+
+Monitor your specs and tasks with a beautiful web dashboard:
+
+```bash
+# Start single project dashboard
+npx claude-spec-dashboard
+
+# Start multi-project dashboard
+npx claude-spec-dashboard --multi
+
+# Start on custom port
+npx claude-spec-dashboard --port 8080
+
+# Auto-open in browser
+npx claude-spec-dashboard --open
+
+# Run in specific project
+npx claude-spec-dashboard --dir /path/to/project
+```
+
+**Dashboard Features:**
+- **Real-time updates** - See changes as they happen
+- **Progress tracking** - Visual progress bars for each spec
+- **Task breakdown** - Expandable task lists with status
+- **Code reuse visibility** - See leverage references at a glance
+- **Multi-project support** - Monitor all your Claude projects at once
+- **Active Sessions tab** - See next tasks to work on from projects with active Claude sessions
+- **Modern UI** - Built with Tailwind CSS and petite-vue
+- **Lightweight** - No heavy frameworks, just fast tools
+- **WebSocket powered** - Instant updates when files change
+- **Dark mode** - Built-in theme toggle with system preference support
 
 ### 🆕 Auto-Generated Task Commands
 
