@@ -195,7 +195,7 @@ export class SpecParser {
       // Try to extract title from the first heading
       // Handle formats like "# Requirements: Feature Name", "# Requirements - Feature Name", or "# Feature Name Requirements"
       const titleMatch = content.match(/^#\s+(?:Requirements\s*[-:]\s+)?(.+?)(?:\s+Requirements)?$/m);
-      if (titleMatch && titleMatch[1].trim() && titleMatch[1].trim().toLowerCase() !== 'requirements') {
+      if (titleMatch && titleMatch[1]?.trim() && titleMatch[1]?.trim().toLowerCase() !== 'requirements') {
         spec.displayName = titleMatch[1].trim();
       }
 
@@ -226,7 +226,7 @@ export class SpecParser {
       if (spec.displayName === this.formatDisplayName(name)) {
         // Handle formats like "# Design: Feature Name", "# Design - Feature Name", or "# Feature Name Design"
         const titleMatch = content.match(/^#\s+(?:Design\s*[-:]\s+)?(.+?)(?:\s+Design(?:\s+Document)?)?$/m);
-        if (titleMatch && titleMatch[1].trim() && titleMatch[1].trim().toLowerCase() !== 'design') {
+        if (titleMatch && titleMatch[1]?.trim() && titleMatch[1]?.trim().toLowerCase() !== 'design') {
           spec.displayName = titleMatch[1].trim();
         }
       }
@@ -261,9 +261,9 @@ export class SpecParser {
       if (spec.displayName === this.formatDisplayName(name)) {
         // Handle formats like "# Tasks: Feature Name", "# Tasks - Feature Name", or "# Implementation Plan: Feature Name"
         const titleMatch = content.match(/^#\s+(?:(?:Tasks|Implementation Plan)\s*[-:]\s+)?(.+?)(?:\s+(?:Tasks|Plan))?$/m);
-        if (titleMatch && titleMatch[1].trim() && 
-            titleMatch[1].trim().toLowerCase() !== 'tasks' && 
-            titleMatch[1].trim().toLowerCase() !== 'implementation plan') {
+        if (titleMatch && titleMatch[1]?.trim() && 
+            titleMatch[1]?.trim().toLowerCase() !== 'tasks' && 
+            titleMatch[1]?.trim().toLowerCase() !== 'implementation plan') {
           spec.displayName = titleMatch[1].trim();
         }
       }
@@ -288,7 +288,10 @@ export class SpecParser {
         } else if (completed < total) {
           spec.status = 'in-progress';
           // Always use the first uncompleted task as in-progress
-          spec.tasks.inProgress = this.findInProgressTask(taskList);
+          const inProgressTask = this.findInProgressTask(taskList);
+          if (inProgressTask) {
+            spec.tasks.inProgress = inProgressTask;
+          }
         } else {
           spec.status = 'completed';
         }
@@ -334,17 +337,22 @@ export class SpecParser {
 
       // Try to extract title from the first heading
       const titleMatch = content.match(/^#\s+(?:Bug Report\s*[-:]\s+)?(.+?)(?:\s+Bug Report)?$/m);
-      if (titleMatch && titleMatch[1].trim() && titleMatch[1].trim().toLowerCase() !== 'bug report') {
+      if (titleMatch && titleMatch[1]?.trim() && titleMatch[1]?.trim().toLowerCase() !== 'bug report') {
         bug.displayName = titleMatch[1].trim();
       }
 
+      const severity = this.extractBugSeverity(content);
+      const expectedBehavior = this.extractSection(content, 'Expected Behavior');
+      const actualBehavior = this.extractSection(content, 'Actual Behavior');
+      const impact = this.extractSection(content, 'Impact');
+      
       bug.report = {
         exists: true,
-        severity: this.extractBugSeverity(content),
+        ...(severity && { severity }),
         reproductionSteps: this.extractReproductionSteps(content),
-        expectedBehavior: this.extractSection(content, 'Expected Behavior'),
-        actualBehavior: this.extractSection(content, 'Actual Behavior'),
-        impact: this.extractSection(content, 'Impact'),
+        ...(expectedBehavior && { expectedBehavior }),
+        ...(actualBehavior && { actualBehavior }),
+        ...(impact && { impact }),
       };
     }
 
@@ -353,11 +361,15 @@ export class SpecParser {
     if (await this.fileExists(analysisPath)) {
       const content = await readFile(analysisPath, 'utf-8');
       
+      const rootCause = this.extractSection(content, 'Root Cause');
+      const proposedFix = this.extractSection(content, 'Proposed Fix');
+      const filesAffected = this.extractFilesAffected(content);
+      
       bug.analysis = {
         exists: true,
-        rootCause: this.extractSection(content, 'Root Cause'),
-        proposedFix: this.extractSection(content, 'Proposed Fix'),
-        filesAffected: this.extractFilesAffected(content),
+        ...(rootCause && { rootCause }),
+        ...(proposedFix && { proposedFix }),
+        ...(filesAffected.length > 0 && { filesAffected }),
       };
       // Only set to analyzing if there's actual analysis content
       // Check for content in the actual analysis sections (not just headers)
@@ -398,9 +410,10 @@ export class SpecParser {
         bug.status = 'fixed';
         
         // Add fix information to bug object
+        const summary = this.extractSection(content, 'Fix Summary');
         bug.fix = {
           exists: true,
-          summary: this.extractSection(content, 'Fix Summary'),
+          ...(summary && { summary }),
           implemented: content.includes('✅') || content.includes('implemented') || content.includes('complete'),
         };
       }
@@ -411,14 +424,17 @@ export class SpecParser {
     if (await this.fileExists(verificationPath)) {
       const content = await readFile(verificationPath, 'utf-8');
       
+      const testsPassed = this.extractTestStatus(content);
+      const regressionChecks = this.extractRegressionChecks(content);
+      
       bug.verification = {
         exists: true,
         verified: content.includes('✅ VERIFIED') || 
                  content.includes('**Verified:** ✓') ||
                  content.includes('**Production Verified**') ||
                  (content.includes('✅') && content.toLowerCase().includes('verified')),
-        testsPassed: this.extractTestStatus(content),
-        regressionChecks: this.extractRegressionChecks(content),
+        ...(testsPassed !== undefined && { testsPassed }),
+        ...(regressionChecks.length > 0 && { regressionChecks }),
       };
       
       // Only set to verifying if there's actual verification content AND we're past the fixing phase
@@ -436,7 +452,7 @@ export class SpecParser {
         bug.status = 'verifying';
         
         // Check if verification is complete
-        if (bug.verification.verified) {
+        if (bug.verification?.verified) {
           bug.status = 'resolved';
         }
       }
@@ -485,24 +501,31 @@ export class SpecParser {
       const match = line.match(taskRegex);
       if (match) {
         const [, indent, checked, id, description] = match;
-        const level = indent.length / 2;
+        const level = (indent?.length || 0) / 2;
 
         currentTask = {
-          id,
-          description: description.trim(),
+          id: id || '',
+          description: description?.trim() || '',
           completed: checked === 'x',
           requirements: [],
         };
 
         // Find parent based on level
-        while (parentStack.length > 0 && parentStack[parentStack.length - 1].level >= level) {
-          parentStack.pop();
+        while (parentStack.length > 0) {
+          const lastParent = parentStack[parentStack.length - 1];
+          if (lastParent && lastParent.level >= level) {
+            parentStack.pop();
+          } else {
+            break;
+          }
         }
 
         if (parentStack.length > 0) {
-          const parent = parentStack[parentStack.length - 1].task;
-          if (!parent.subtasks) parent.subtasks = [];
-          parent.subtasks.push(currentTask);
+          const parent = parentStack[parentStack.length - 1]?.task;
+          if (parent) {
+            if (!parent.subtasks) parent.subtasks = [];
+            parent.subtasks.push(currentTask);
+          }
         } else {
           tasks.push(currentTask);
         }
@@ -511,13 +534,13 @@ export class SpecParser {
       } else if (currentTask) {
         // Check for requirements
         const reqMatch = line.match(requirementsRegex);
-        if (reqMatch) {
+        if (reqMatch && reqMatch[1]) {
           currentTask.requirements = reqMatch[1].split(',').map((r) => r.trim());
         }
 
         // Check for leverage
         const levMatch = line.match(leverageRegex);
-        if (levMatch) {
+        if (levMatch && levMatch[1]) {
           currentTask.leverage = levMatch[1].trim();
         }
 
@@ -636,7 +659,7 @@ export class SpecParser {
           if (!currentRequirement.userStory) {
             currentRequirement.userStory = '';
           }
-          currentRequirement.userStory += ' ' + line.trim();
+          currentRequirement.userStory += ' ' + (line?.trim() ?? '');
           debug(`Building user story for ${currentRequirement.id}: ${line.trim()}`);
         }
         // Look for acceptance criteria section
@@ -718,7 +741,7 @@ export class SpecParser {
             currentRequirement.userStory = line.trim();
           } else if (!line.match(/^[-•]\s+/)) {
             // Continue building the description if it's not a bullet point
-            currentRequirement.userStory += ' ' + line.trim();
+            currentRequirement.userStory += ' ' + (line?.trim() ?? '');
           }
           debug(`Adding description for ${currentRequirement.id}: ${line.trim()}`);
         }
